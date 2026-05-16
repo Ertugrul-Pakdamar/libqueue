@@ -15,7 +15,7 @@ void print_name(t_node *this)
 {
     char **data = (char**)this->args;
     printf("%s\n", this->name);
-    printf("%s\n", data[0]);
+    printf("%s\n", data[1]);
 }
 
 char **get_allocated_array()
@@ -31,7 +31,7 @@ void clear_double_array(void *array)
 {
     void **my_array = (void**)array;
     int i = 0;
-    
+
     while (my_array[i])
         free(my_array[i++]);
     free(my_array);

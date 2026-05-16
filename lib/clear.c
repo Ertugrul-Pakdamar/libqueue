@@ -1,6 +1,16 @@
 #include "queue.h"
 
-void	clear_queue(t_node **queue, void (*del)(void *))
+void	destroy_node(t_node *node)
+{
+	if (!node)
+		return ;
+	free(node->name);
+	if (node->args && node->del_for_args)
+		(node->del_for_args)(node->args);
+	free(node);
+}
+
+void	clear_queue(t_node **queue)
 {
 	t_node	*temp;
 
@@ -9,17 +19,8 @@ void	clear_queue(t_node **queue, void (*del)(void *))
 	while (*queue)
 	{
         temp = (*queue)->next;
-		delete_node(*queue, (*del));
+		destroy_node(*queue);
 		*queue = temp;
 	}
 	*queue = NULL;
-}
-
-void	delete_node(t_node *node, void (*del)(void *))
-{
-	if (!node || !del)
-		return ;
-	(*del)(node->name);
-	(node->del_for_args)(node->args);
-	(*del)(node);
 }

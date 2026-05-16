@@ -7,15 +7,20 @@ void    run_node(t_node *node)
     node->process(node);
 }
 
-void    run_queue_synchronous(t_node *first_node)
+void    run_queue_synchronous(t_node **first_node)
 {
-    if (first_node == NULL || first_node->process == NULL)
-        return ;
+    t_node  *current;
+    t_node  *next;
 
-    while (first_node->next)
+    if (first_node == NULL || *first_node == NULL)
+        return ;
+    current = *first_node;
+    while (current)
     {
-        run_node(first_node);
-        first_node = first_node->next;
+        next = current->next;
+        run_node(current);
+        destroy_node(current);
+        current = next;
     }
-    run_node(first_node);
+    *first_node = NULL;
 }

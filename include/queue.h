@@ -22,10 +22,10 @@ char	**get_node_names(t_node *first_node);
 int		size_of_queue(t_node *node);
 t_node	*get_last_node_of_queue(t_node *queue);
 
-void	clear_queue(t_node **queue, void (*del)(void *));
-void	delete_node(t_node *queue, void (*del)(void *));
+void	destroy_node(t_node *node);
+void	clear_queue(t_node **queue);
 
 void	run_node(t_node *node);
-void    run_queue_synchronous(t_node *first_node);
+void    run_queue_synchronous(t_node **first_node);
 
 #endif
