@@ -1,3 +1,14 @@
+/*
+** MISRA C:2012 Rule 21.3 deviation:
+**   malloc() is called once in queue_init() to allocate the node pool backing
+**   buffer, and free() is called once in queue_destroy() to release it.
+**   No dynamic allocation occurs on any code path after initialisation.
+**   Rationale: a fixed-size pool backed by a single malloc block is more
+**   deterministic than repeated individual allocations; all subsequent node
+**   allocations are served by the pool (O(1), no system call).
+*/
+#include <stdlib.h>
+#include <string.h>
 #include "queue.h"
 
 int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config)

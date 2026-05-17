@@ -1,11 +1,20 @@
+/*
+** MISRA C:2012 Rule 21.3 deviation:
+**   malloc() is called once in ring_init() to allocate the ring buffer array,
+**   and free() is called once in ring_destroy() to release it.
+**   No dynamic allocation occurs after ring_init() returns.
+**   Rationale: identical to queue_alloc.c — one-time allocation backs all
+**   lock-free operations at zero further cost.
+*/
+#include <stdlib.h>
 #include "queue.h"
 
 _Static_assert(
     offsetof(t_ring, write_idx) % RING_CACHE_LINE == 0,
-    "write_idx cache line'a hizalanmamis");
+    "write_idx must be aligned to a cache line");
 _Static_assert(
     offsetof(t_ring, read_idx) % RING_CACHE_LINE == 0,
-    "read_idx cache line'a hizalanmamis");
+    "read_idx must be aligned to a cache line");
 
 static size_t   next_power_of_two(size_t n)
 {

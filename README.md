@@ -39,11 +39,16 @@ libqueue/
 ├── include/
 │   └── queue.h              public API  ← start here
 ├── deps/
-│   ├── mem/                 → github.com/Ertugrul-Pakdamar/libmem
-│   └── osal/                → github.com/Ertugrul-Pakdamar/libosal
+│   ├── libmem/              → github.com/Ertugrul-Pakdamar/libmem
+│   └── libosal/             → github.com/Ertugrul-Pakdamar/libosal
+├── examples/
+│   ├── 01_sync_queue.c
+│   ├── 02_fail_policy.c
+│   └── 03_async_listener.c
 ├── build/                   generated — not committed
 ├── Makefile
-└── README.md
+├── README.md
+└── CONTRIBUTING.md
 ```
 
 ---
@@ -75,17 +80,17 @@ cd libqueue
 ### 2 — Get the dependencies
 
 ```bash
-# Clone libmem into deps/mem
-git clone https://github.com/Ertugrul-Pakdamar/libmem.git deps/mem
+# Clone libmem into deps/libmem
+git clone https://github.com/Ertugrul-Pakdamar/libmem.git deps/libmem
 
-# Clone libosal into deps/osal
-git clone https://github.com/Ertugrul-Pakdamar/libosal.git deps/osal
+# Clone libosal into deps/libosal
+git clone https://github.com/Ertugrul-Pakdamar/libosal.git deps/libosal
 ```
 
 ### 3 — Build
 
 ```bash
-make all      # builds deps/mem, deps/osal, then libqueue.a
+make all      # builds deps/libmem, deps/libosal, then libqueue.a
 ```
 
 ### Available targets
@@ -183,8 +188,8 @@ cp libqueue.a      /your/project/lib/
 cp include/queue.h /your/project/include/
 
 # Also copy the dependency headers
-cp deps/mem/include/memory.h  /your/project/include/
-cp deps/osal/include/osal.h   /your/project/include/
+cp deps/libmem/include/memory.h  /your/project/include/
+cp deps/libosal/include/osal.h   /your/project/include/
 
 # Link
 cc main.c -o app -Iinclude -Llib -lqueue -lmem -losal -lpthread
@@ -194,39 +199,18 @@ cc main.c -o app -Iinclude -Llib -lqueue -lmem -losal -lpthread
 
 ## MISRA C:2012 Notes
 
-All `<pthread.h>` and `<stdatomic.h>` usage is confined to
-`deps/osal/posix/osal_posix.c`. Rule 21.21 deviation is documented in that file.
-No other translation unit includes OS or compiler-extension headers.
+| Rule | Deviation | Where | Rationale |
+|---|---|---|---|
+| 21.3 | `malloc` / `free` at init time | `src/queue_alloc.c`, `src/ring_ops.c` | Each is called exactly once (at `queue_init` / `ring_init`) to allocate a fixed backing buffer. No dynamic allocation occurs after initialisation. |
+| 21.21 | `<stdatomic.h>`, `<pthread.h>` | `deps/libosal/posix/osal_posix.c` | Release/acquire ordering is required for the lock-free SPSC ring buffer and cannot be achieved with standard C alone. Confined to a single translation unit. |
+
+All other translation units include only MISRA-compliant headers.
 
 ---
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Architecture
-
-```
-libqueue/
-├── src/                     source files
-│   ├── queue_alloc.c         queue lifecycle, node creation
-│   ├── queue_ops.c           add_node_to_queue
-│   ├── queue_clear.c         node_destroy, clear_queue
-│   ├── queue_run.c           run_queue_synchronous, retry/policy logic
-│   ├── queue_utils.c         size_of_queue, get_last_node_of_queue
-│   ├── ring_ops.c            SPSC ring buffer
-│   └── listener.c            async worker thread
-├── include/
-│   └── queue.h               public API
-├── deps/
-│   ├── mem/                  pool / arena / slab allocators
-│   └── osal/                 OS abstraction layer
-├── build/                    object files (generated)
-├── Makefile
-└── README.md
-```
-
----
 
 ## Dependencies
 

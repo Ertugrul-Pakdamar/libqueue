@@ -15,11 +15,6 @@
 #ifndef QUEUE_H
 # define QUEUE_H
 
-# include <stdio.h>
-# include <stdint.h>
-# include <stdlib.h>
-# include <string.h>
-# include <stddef.h>
 # include "../deps/libmem/include/memory.h"
 # include "../deps/libosal/include/osal.h"
 

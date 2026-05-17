@@ -12,6 +12,7 @@ Contributions are welcome. Please read this guide before opening a PR.
 - New fail policies (add a value to `t_fail_policy` in `queue.h`, handle it in `queue_run.c`)
 - Performance improvements to the ring buffer (`src/ring_ops.c`)
 - Additional queue utility functions (`src/queue_utils.c`)
+- New examples in `examples/` (see [Adding an example](#adding-an-example) below)
 - Test coverage improvements
 
 ---
@@ -55,3 +56,27 @@ are separate repositories:
 
 - Allocators → [Ertugrul-Pakdamar/libmem](https://github.com/Ertugrul-Pakdamar/libmem)
 - OS abstraction (new platform ports) → [Ertugrul-Pakdamar/libosal](https://github.com/Ertugrul-Pakdamar/libosal)
+
+---
+
+## Adding an example
+
+Examples live in `examples/` and are built with `make examples`. Each example
+is a single self-contained `.c` file that links against `libqueue.a`,
+`libmem.a`, and `libosal.a`.
+
+### Naming convention
+
+```
+examples/NN_short_name.c     (NN = two-digit number, e.g. 04_ring_backpressure.c)
+```
+
+### Checklist
+
+1. The file compiles without warnings under `-Wall -Wextra -Werror`.
+2. The top of the file has a doc comment explaining what the example demonstrates
+   and how to build and run it.
+3. `main()` returns `0` on success, non-zero on failure — so CI can detect broken examples.
+4. No `malloc` / `free` in the example itself — use the queue's node pool
+   and provide a `del_for_args` destructor if `args` requires cleanup.
+5. Add a row to the **Examples** table in `README.md`.
