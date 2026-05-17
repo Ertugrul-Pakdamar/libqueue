@@ -7,14 +7,16 @@ SRC = lib/queue_ops.c \
 		lib/queue_clear.c \
 		lib/queue_utils.c \
 		lib/queue_run.c \
-		lib/ring_ops.c
+		lib/ring_ops.c \
+		lib/listener.c
 
 OBJ = build/queue_ops.o \
 		build/queue_alloc.o \
 		build/queue_clear.o \
 		build/queue_utils.o \
 		build/queue_run.o \
-		build/ring_ops.o
+		build/ring_ops.o \
+		build/listener.o
 
 default: $(LIBMEM) $(NAME)
 
@@ -22,7 +24,7 @@ $(LIBMEM):
 	@$(MAKE) -C libmem
 
 main: $(NAME) $(LIBMEM)
-	@cc $(CFLAGS) -o main main.c $(NAME) $(LIBMEM)
+	@cc $(CFLAGS) -o main main.c $(NAME) $(LIBMEM) -lpthread
 	@echo "Main executable created successfully."
 
 $(NAME):

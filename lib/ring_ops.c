@@ -59,6 +59,34 @@ int     ring_push(t_ring *ring, t_node *node)
     return (1);
 }
 
+size_t  ring_size(t_ring *ring)
+{
+    size_t  write;
+    size_t  read;
+
+    write = atomic_load_explicit(&ring->write_idx, memory_order_acquire);
+    read  = atomic_load_explicit(&ring->read_idx,  memory_order_acquire);
+    return (write - read);
+}
+
+int     ring_is_empty(t_ring *ring)
+{
+    return (ring_size(ring) == 0);
+}
+
+int     ring_is_full(t_ring *ring)
+{
+    return (ring_size(ring) >= ring->capacity);
+}
+
+void    ring_drain(t_ring *ring, t_queue *queue)
+{
+    t_node  *node;
+
+    while ((node = ring_pop(ring)) != NULL)
+        node_destroy(queue, node);
+}
+
 t_node  *ring_pop(t_ring *ring)
 {
     size_t  read;

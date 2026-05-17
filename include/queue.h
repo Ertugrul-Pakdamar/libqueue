@@ -7,6 +7,7 @@
 # include <string.h>
 # include <stddef.h>
 # include <stdatomic.h>
+# include <pthread.h>
 # include "../libmem/include/memory.h"
 
 # define NODE_NAME_MAX   64
@@ -73,7 +74,6 @@ int     run_node(t_node *node);
 void    run_queue_synchronous(t_queue *queue);
 
 /* Utilities */
-char    **get_node_names(t_node *first_node);
 int     size_of_queue(t_node *node);
 t_node  *get_last_node_of_queue(t_node *queue);
 
@@ -100,5 +100,21 @@ int     ring_init(t_ring *ring, size_t capacity);
 void    ring_destroy(t_ring *ring);
 int     ring_push(t_ring *ring, t_node *node);
 t_node  *ring_pop(t_ring *ring);
+size_t  ring_size(t_ring *ring);
+int     ring_is_empty(t_ring *ring);
+int     ring_is_full(t_ring *ring);
+void    ring_drain(t_ring *ring, t_queue *queue);
+
+typedef struct s_listener
+{
+    pthread_t       thread;
+    _Atomic int     running;
+    t_ring         *ring;
+    t_queue        *queue;
+}   t_listener;
+
+/* Listener */
+int     listener_start(t_listener *listener, t_ring *ring, t_queue *queue);
+void    listener_stop(t_listener *listener);
 
 #endif
