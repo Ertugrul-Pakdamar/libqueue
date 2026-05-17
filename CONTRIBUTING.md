@@ -1,7 +1,5 @@
 # Contributing to libqueue
 
-← Back to [README](README.md)
-
 Contributions are welcome. Please read this guide before opening a PR.
 
 ---
