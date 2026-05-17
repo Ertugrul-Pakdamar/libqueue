@@ -1,63 +1,162 @@
-NAME   = libqueue.a
-LIBMEM = libmem/libmem.a
-LIBOSAL = libosal/libosal.a
-CFLAGS = -Wall -Wextra -Werror -Iinclude -Ilibmem/include -Ilibosal/include
+# =============================================================================
+# libqueue — dynamic queue · SPSC ring buffer · async listener
+# =============================================================================
+#
+#  Targets (run `make` or `make help` to see this list):
+#
+#    help       Show this message                     (default)
+#    all        Build deps + libqueue.a
+#    examples   Build all programs in examples/
+#    valgrind   Run examples/01_sync_queue under Valgrind
+#    clean      Remove object files and example binaries
+#    fclean     clean + remove libqueue.a
+#    re         fclean + all
+#
+# =============================================================================
 
-SRC = lib/queue_ops.c \
-		lib/queue_alloc.c \
-		lib/queue_clear.c \
-		lib/queue_utils.c \
-		lib/queue_run.c \
-		lib/ring_ops.c \
-		lib/listener.c
+# -- Toolchain ----------------------------------------------------------------
 
-OBJ = build/queue_ops.o \
-		build/queue_alloc.o \
-		build/queue_clear.o \
-		build/queue_utils.o \
-		build/queue_run.o \
-		build/ring_ops.o \
-		build/listener.o
+CC      := cc
+AR      := ar
+ARFLAGS := rcs
 
-default: $(LIBMEM) $(LIBOSAL) $(NAME)
+# -- Library name -------------------------------------------------------------
+
+NAME    := libqueue.a
+
+# -- Include paths ------------------------------------------------------------
+
+CFLAGS  := -Wall -Wextra -Werror   \
+           -Iinclude               \
+           -Ideps/libmem/include      \
+           -Ideps/libosal/include
+
+# -- Sources & objects --------------------------------------------------------
+
+SRC :=  src/queue_alloc.c  \
+        src/queue_ops.c    \
+        src/queue_clear.c  \
+        src/queue_run.c    \
+        src/queue_utils.c  \
+        src/ring_ops.c     \
+        src/listener.c
+
+OBJ := $(SRC:src/%.c=build/%.o)
+
+# -- Sub-project artifacts ----------------------------------------------------
+
+LIBMEM  := deps/libmem/libmem.a
+LIBOSAL := deps/libosal/libosal.a
+
+# -- Terminal colors (no-op if terminal does not support them) ----------------
+
+RESET  := \033[0m
+BOLD   := \033[1m
+DIM    := \033[2m
+GREEN  := \033[32m
+CYAN   := \033[36m
+YELLOW := \033[33m
+
+# =============================================================================
+# Default target
+# =============================================================================
+
+.DEFAULT_GOAL := help
+
+.PHONY: help
+help:
+	@printf "\n$(BOLD)libqueue$(RESET) — available targets\n\n"
+	@printf "  $(CYAN)%-14s$(RESET) %s\n" "make all"      "Build deps + $(NAME)"
+	@printf "  $(CYAN)%-14s$(RESET) %s\n" "make examples" "Build all programs in examples/"
+	@printf "  $(CYAN)%-14s$(RESET) %s\n" "make valgrind" "Run examples/01_sync_queue under Valgrind (leak check)"
+	@printf "  $(CYAN)%-14s$(RESET) %s\n" "make clean"    "Remove object files and example binaries"
+	@printf "  $(CYAN)%-14s$(RESET) %s\n" "make fclean"   "clean + remove $(NAME)"
+	@printf "  $(CYAN)%-14s$(RESET) %s\n" "make re"       "fclean + all"
+	@printf "\n  $(DIM)Dependencies: deps/libmem  deps/libosal$(RESET)\n\n"
+
+# =============================================================================
+# Build targets
+# =============================================================================
+
+## all: Build all dependencies and libqueue.a
+.PHONY: all
+all: $(LIBMEM) $(LIBOSAL) $(NAME)
+
+# -- Sub-projects -------------------------------------------------------------
 
 $(LIBMEM):
-	@$(MAKE) -C libmem
+	@printf "$(DIM)→ building deps/libmem$(RESET)\n"
+	@$(MAKE) -C deps/libmem all --no-print-directory
 
 $(LIBOSAL):
-	@$(MAKE) -C libosal
+	@printf "$(DIM)→ building deps/libosal$(RESET)\n"
+	@$(MAKE) -C deps/libosal all --no-print-directory
 
-main: $(NAME) $(LIBMEM) $(LIBOSAL)
-	@cc $(CFLAGS) -o main main.c $(NAME) $(LIBMEM) $(LIBOSAL) -lpthread
-	@echo "Main executable created successfully."
+# -- Object compilation -------------------------------------------------------
 
-$(NAME):
-	@cc -c $(CFLAGS) $(SRC)
-	@mv *.o build/
-	@ar rcs $(NAME) $(OBJ)
-	@echo "Library $(NAME) created successfully."
+build/%.o: src/%.c | build
+	@printf "  $(DIM)CC$(RESET)  $<\n"
+	@$(CC) $(CFLAGS) -c $< -o $@
 
+build:
+	@mkdir -p build
+
+# -- Static library -----------------------------------------------------------
+
+$(NAME): $(OBJ)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf "$(GREEN)$(BOLD)✓ $(NAME)$(RESET)\n"
+
+# =============================================================================
+# Examples
+# =============================================================================
+
+EXAMPLES_SRC := $(wildcard examples/*.c)
+EXAMPLES_BIN := $(EXAMPLES_SRC:examples/%.c=examples/bin/%)
+EXAMPLES_CFLAGS := $(CFLAGS) -Iexamples
+
+## examples: Build all programs in examples/
+.PHONY: examples
+examples: $(LIBMEM) $(LIBOSAL) $(NAME) $(EXAMPLES_BIN)
+
+examples/bin/%: examples/%.c $(NAME) $(LIBMEM) $(LIBOSAL) | examples/bin
+	@printf "  $(DIM)CC$(RESET)  $<\n"
+	@$(CC) $(EXAMPLES_CFLAGS) -o $@ $< $(NAME) $(LIBMEM) $(LIBOSAL) -lpthread
+	@printf "$(GREEN)✓ $@$(RESET)\n"
+
+examples/bin:
+	@mkdir -p examples/bin
+
+# =============================================================================
+# Valgrind
+# =============================================================================
+
+## valgrind: Build examples then run 01_sync_queue under Valgrind
+.PHONY: valgrind
+valgrind: examples
+	@printf "$(YELLOW)$(BOLD)▶  valgrind$(RESET)\n\n"
+	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+		examples/bin/01_sync_queue
+
+# =============================================================================
+# Cleanup targets
+# =============================================================================
+
+## clean: Remove object files and example binaries
+.PHONY: clean
 clean:
-	@rm -f main
-	@rm -f $(OBJ)
-	@$(MAKE) -C libmem clean
-	@$(MAKE) -C libosal clean
-	@echo "Cleaned up successfully."
+	@rm -rf examples/bin $(OBJ)
+	@$(MAKE) -C deps/libmem  clean --no-print-directory
+	@$(MAKE) -C deps/libosal clean --no-print-directory
+	@printf "$(DIM)cleaned$(RESET)\n"
 
-clean-all: clean
+## fclean: clean + remove libqueue.a
+.PHONY: fclean
+fclean: clean
 	@rm -f $(NAME)
-	@$(MAKE) -C libmem clean-all
-	@$(MAKE) -C libosal clean-all
-	@echo "All cleaned up successfully."
+	@$(MAKE) -C deps/libmem  fclean --no-print-directory
+	@$(MAKE) -C deps/libosal fclean --no-print-directory
 
-run: clean-all main
-	@./main
-
-valgrind: clean-all main
-	@valgrind --leak-check=full --show-leak-kinds=all ./main
-
-re: clean default
-
-re-run: clean run
-
-.PHONY: default main clean run valgrind re re-run
+## re: fclean + all
+.PHONY: re
+re: fclean all

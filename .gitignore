@@ -1,21 +1,20 @@
-build
-main
-a.out
+# Build artifacts
+build/
+bin/
 *.o
 *.a
 *.so
+
+# Executables
+main
+a.out
+
+# Temporary & editor files
 *.tmp
 *.bak
 *.swp
 *.swo
-*.DS_Store
-*.vscode
-*.idea
-*.vs
-*.env
-*.zip
-*.tar
-*.rar
-*.7z
-main.c
-test.c
+.DS_Store
+.vscode/
+.idea/
+.vs/
