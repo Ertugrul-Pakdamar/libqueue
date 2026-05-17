@@ -1,6 +1,7 @@
-NAME = libqueue.a
+NAME   = libqueue.a
 LIBMEM = libmem/libmem.a
-CFLAGS = -Wall -Wextra -Werror -Iinclude -Ilibmem/include
+LIBOSAL = libosal/libosal.a
+CFLAGS = -Wall -Wextra -Werror -Iinclude -Ilibmem/include -Ilibosal/include
 
 SRC = lib/queue_ops.c \
 		lib/queue_alloc.c \
@@ -18,13 +19,16 @@ OBJ = build/queue_ops.o \
 		build/ring_ops.o \
 		build/listener.o
 
-default: $(LIBMEM) $(NAME)
+default: $(LIBMEM) $(LIBOSAL) $(NAME)
 
 $(LIBMEM):
 	@$(MAKE) -C libmem
 
-main: $(NAME) $(LIBMEM)
-	@cc $(CFLAGS) -o main main.c $(NAME) $(LIBMEM) -lpthread
+$(LIBOSAL):
+	@$(MAKE) -C libosal
+
+main: $(NAME) $(LIBMEM) $(LIBOSAL)
+	@cc $(CFLAGS) -o main main.c $(NAME) $(LIBMEM) $(LIBOSAL) -lpthread
 	@echo "Main executable created successfully."
 
 $(NAME):
@@ -37,11 +41,13 @@ clean:
 	@rm -f main
 	@rm -f $(OBJ)
 	@$(MAKE) -C libmem clean
+	@$(MAKE) -C libosal clean
 	@echo "Cleaned up successfully."
 
 clean-all: clean
 	@rm -f $(NAME)
 	@$(MAKE) -C libmem clean-all
+	@$(MAKE) -C libosal clean-all
 	@echo "All cleaned up successfully."
 
 run: clean-all main

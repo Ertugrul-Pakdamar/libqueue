@@ -8,7 +8,7 @@ static void *worker(void *arg)
     int          effective;
 
     l = (t_listener *)arg;
-    while (atomic_load_explicit(&l->running, memory_order_acquire))
+    while (osal_atomic_int_load(&l->running))
     {
         node = ring_pop(l->ring);
         if (!node)
@@ -31,7 +31,7 @@ static void *worker(void *arg)
             if (l->queue->policy == POLICY_STOP)
             {
                 node_destroy(l->queue, node);
-                atomic_store_explicit(&l->running, 0, memory_order_release);
+                osal_atomic_int_store(&l->running, 0);
                 return (NULL);
             }
         }
@@ -44,10 +44,10 @@ int     listener_start(t_listener *listener, t_ring *ring, t_queue *queue)
 {
     listener->ring  = ring;
     listener->queue = queue;
-    atomic_store_explicit(&listener->running, 1, memory_order_release);
-    if (pthread_create(&listener->thread, NULL, worker, listener) != 0)
+    osal_atomic_int_init(&listener->running, 1);
+    if (osal_task_create(&listener->task, worker, listener) != 0)
     {
-        atomic_store_explicit(&listener->running, 0, memory_order_release);
+        osal_atomic_int_store(&listener->running, 0);
         return (0);
     }
     return (1);
@@ -55,6 +55,6 @@ int     listener_start(t_listener *listener, t_ring *ring, t_queue *queue)
 
 void    listener_stop(t_listener *listener)
 {
-    atomic_store_explicit(&listener->running, 0, memory_order_release);
-    pthread_join(listener->thread, NULL);
+    osal_atomic_int_store(&listener->running, 0);
+    osal_task_join(&listener->task);
 }

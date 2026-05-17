@@ -6,9 +6,8 @@
 # include <stdlib.h>
 # include <string.h>
 # include <stddef.h>
-# include <stdatomic.h>
-# include <pthread.h>
 # include "../libmem/include/memory.h"
+# include "osal.h"
 
 # define NODE_NAME_MAX   64
 # define RING_CACHE_LINE 64
@@ -25,7 +24,6 @@ typedef struct s_node
     char            name[NODE_NAME_MAX];
     int             (*process)(struct s_node *);
     void            *args;
-    size_t          args_size;
     void            (*del_for_args)(void *);
     int             retry_count;
     int             max_retries;
@@ -45,6 +43,7 @@ typedef struct s_queue
 {
     t_node          *head;
     mem_pool_t       node_pool;
+    osal_mutex_t     pool_lock;
     t_fail_policy    policy;
     int              max_retries;
     void           (*on_error)(t_node *, int);
@@ -88,11 +87,11 @@ typedef struct __attribute__((aligned(RING_CACHE_LINE))) s_ring
                             - 2 * sizeof(size_t)
                             - sizeof(mem_arena_t)];
 
-    _Atomic size_t    write_idx;
-    char              _pad1[RING_CACHE_LINE - sizeof(_Atomic size_t)];
+    osal_atomic_size_t write_idx;
+    char               _pad1[RING_CACHE_LINE - sizeof(osal_atomic_size_t)];
 
-    _Atomic size_t    read_idx;
-    char              _pad2[RING_CACHE_LINE - sizeof(_Atomic size_t)];
+    osal_atomic_size_t read_idx;
+    char               _pad2[RING_CACHE_LINE - sizeof(osal_atomic_size_t)];
 }   t_ring;
 
 /* Ring Ops */
@@ -107,10 +106,10 @@ void    ring_drain(t_ring *ring, t_queue *queue);
 
 typedef struct s_listener
 {
-    pthread_t       thread;
-    _Atomic int     running;
-    t_ring         *ring;
-    t_queue        *queue;
+    osal_task_t       task;
+    osal_atomic_int_t running;
+    t_ring           *ring;
+    t_queue          *queue;
 }   t_listener;
 
 /* Listener */
