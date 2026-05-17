@@ -79,12 +79,14 @@ t_node  *get_last_node_of_queue(t_node *queue);
 
 typedef struct __attribute__((aligned(RING_CACHE_LINE))) s_ring
 {
-    t_node          **buffer;
-    size_t            capacity;
-    size_t            mask;
-    char              _pad0[RING_CACHE_LINE
+    t_node         **buffer;
+    size_t           capacity;
+    size_t           mask;
+    mem_arena_t      arena;
+    char             _pad0[RING_CACHE_LINE
                             - sizeof(t_node **)
-                            - 2 * sizeof(size_t)];
+                            - 2 * sizeof(size_t)
+                            - sizeof(mem_arena_t)];
 
     _Atomic size_t    write_idx;
     char              _pad1[RING_CACHE_LINE - sizeof(_Atomic size_t)];

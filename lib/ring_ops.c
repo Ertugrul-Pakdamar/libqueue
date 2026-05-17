@@ -19,10 +19,15 @@ static size_t   next_power_of_two(size_t n)
 
 int     ring_init(t_ring *ring, size_t capacity)
 {
+    void    *buffer;
+
     capacity = next_power_of_two(capacity);
-    ring->buffer = (t_node **)malloc(sizeof(t_node *) * capacity);
-    if (!ring->buffer)
+    buffer = malloc(sizeof(t_node *) * capacity);
+    if (!buffer)
         return (0);
+    arena_init(&ring->arena, buffer, sizeof(t_node *) * capacity);
+    ring->buffer = (t_node **)arena_alloc(&ring->arena,
+                        sizeof(t_node *) * capacity);
     ring->capacity = capacity;
     ring->mask = capacity - 1;
     atomic_init(&ring->write_idx, 0);
@@ -32,7 +37,11 @@ int     ring_init(t_ring *ring, size_t capacity)
 
 void    ring_destroy(t_ring *ring)
 {
-    free(ring->buffer);
+    void    *raw;
+
+    raw = ring->arena.start_addr;
+    arena_reset(&ring->arena);
+    free(raw);
     ring->buffer = NULL;
 }
 
