@@ -1,22 +1,28 @@
 NAME = libqueue.a
-CFLAGS = -Wall -Wextra -Werror -I./include
+LIBMEM = libmem/libmem.a
+CFLAGS = -Wall -Wextra -Werror -Iinclude -Ilibmem/include
 
-SRC = lib/queue.c \
-		lib/alloc.c \
-		lib/clear.c \
-		lib/utils.c \
-		lib/run.c
+SRC = lib/queue_ops.c \
+		lib/queue_alloc.c \
+		lib/queue_clear.c \
+		lib/queue_utils.c \
+		lib/queue_run.c \
+		lib/ring_ops.c
 
-OBJ = build/queue.o \
-		build/alloc.o \
-		build/clear.o \
-		build/utils.o \
-		build/run.o
+OBJ = build/queue_ops.o \
+		build/queue_alloc.o \
+		build/queue_clear.o \
+		build/queue_utils.o \
+		build/queue_run.o \
+		build/ring_ops.o
 
-default: $(NAME)
+default: $(LIBMEM) $(NAME)
 
-main: $(NAME)
-	@cc $(CFLAGS) -o main main.c $(NAME) -lssl -lcrypto
+$(LIBMEM):
+	@$(MAKE) -C libmem
+
+main: $(NAME) $(LIBMEM)
+	@cc $(CFLAGS) -o main main.c $(NAME) $(LIBMEM)
 	@echo "Main executable created successfully."
 
 $(NAME):
@@ -28,10 +34,12 @@ $(NAME):
 clean:
 	@rm -f main
 	@rm -f $(OBJ)
+	@$(MAKE) -C libmem clean
 	@echo "Cleaned up successfully."
 
 clean-all: clean
 	@rm -f $(NAME)
+	@$(MAKE) -C libmem clean-all
 	@echo "All cleaned up successfully."
 
 run: clean-all main
