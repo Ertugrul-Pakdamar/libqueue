@@ -15,6 +15,12 @@
 #ifndef QUEUE_H
 # define QUEUE_H
 
+/* ---- Version ------------------------------------------------------------- */
+# define LIBQUEUE_VERSION_MAJOR 0
+# define LIBQUEUE_VERSION_MINOR 1
+# define LIBQUEUE_VERSION_PATCH 0
+# define LIBQUEUE_VERSION       "0.1.0"
+
 # include "../deps/libmem/include/memory.h"
 # include "../deps/libosal/include/osal.h"
 

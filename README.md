@@ -317,3 +317,50 @@ ring_destroy(&ring);
 All `<pthread.h>` and `<stdatomic.h>` usage is confined to
 `deps/osal/posix/osal_posix.c`. Rule 21.21 deviation is documented in that file.
 No other translation unit includes OS or compiler-extension headers.
+
+---
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+
+| Change | Bump |
+|---|---|
+| Bug fix, no API change | `PATCH` → `0.1.0 → 0.1.1` |
+| New function or feature, existing API unchanged | `MINOR` → `0.1.0 → 0.2.0` |
+| Function signature changed, type removed, or struct layout broken | `MAJOR` → `0.x.y → 1.0.0` |
+
+> While `MAJOR == 0` (pre-release), breaking changes may be reflected in `MINOR` instead.  
+> The API is not considered stable until `v1.0.0`.
+
+### Current version
+
+`v0.1.0` — defined in `include/queue.h`:
+
+```c
+#define LIBQUEUE_VERSION_MAJOR 0
+#define LIBQUEUE_VERSION_MINOR 1
+#define LIBQUEUE_VERSION_PATCH 0
+#define LIBQUEUE_VERSION       "0.1.0"
+```
+
+### Compile-time version check
+
+```c
+#include "include/queue.h"
+
+#if LIBQUEUE_VERSION_MAJOR == 0 && LIBQUEUE_VERSION_MINOR >= 1
+    /* use a feature added in v0.1 */
+#endif
+```
+
+### Git tags
+
+Each release is tagged in the repository:
+
+```bash
+git tag -a v0.1.0 -m "Initial public release"
+git push origin v0.1.0
+```
+
+List all available tags: `git tag -l`
