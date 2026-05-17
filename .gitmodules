@@ -1,0 +1,7 @@
+[submodule "deps/libmem"]
+	path = deps/libmem
+	url = https://github.com/Ertugrul-Pakdamar/libmem.git
+
+[submodule "deps/libosal"]
+	path = deps/libosal
+	url = https://github.com/Ertugrul-Pakdamar/libosal.git
