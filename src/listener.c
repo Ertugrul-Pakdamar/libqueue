@@ -14,7 +14,7 @@ static void *worker(void *arg)
         if (!node)
             continue ;
         node->retry_count = 0;
-        result = run_node(node);
+        result = run_node(l->queue, node);
         effective = (node->max_retries >= 0)
                     ? node->max_retries
                     : l->queue->max_retries;
@@ -22,7 +22,7 @@ static void *worker(void *arg)
                && node->retry_count < effective)
         {
             node->retry_count++;
-            result = run_node(node);
+            result = run_node(l->queue, node);
         }
         if (result != 0)
         {

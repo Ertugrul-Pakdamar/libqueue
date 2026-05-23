@@ -20,7 +20,7 @@ Contributions are welcome. Please read this guide before opening a PR.
 ```bash
 # 1. Fork the repo on GitHub
 # 2. Clone your fork
-git clone https://github.com/<your-username>/libqueue.git
+git clone https://github.com/Ertugrul-Pakdamar/libqueue.git
 cd libqueue
 
 # 3. Set up dependencies

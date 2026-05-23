@@ -33,6 +33,8 @@ int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config
         queue->max_retries = 3;
         queue->on_error = NULL;
     }
+    for (size_t i = 0; i < EVENT_TYPE_MAX; ++i)
+        queue->handlers[i] = NULL;
     return (1);
 }
 
@@ -55,7 +57,7 @@ t_node  *new_node(t_queue *queue, const t_node_config *config)
         return (NULL);
     strncpy(node->name, config->name, NODE_NAME_MAX - 1);
     node->name[NODE_NAME_MAX - 1] = '\0';
-    node->process = config->process;
+    node->event_type = config->event_type;
     node->args = config->args;
     node->del_for_args = config->del_for_args;
     node->retry_count = 0;
