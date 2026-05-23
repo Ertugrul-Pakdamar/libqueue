@@ -129,21 +129,32 @@ make examples
 ```c
 #include "queue.h"
 
+#define EVENT_TASK_RUN 1
+
 int my_task(t_node *node)
 {
-    printf("running: %s\n", node->name);
+    const char *name = (const char *)node->args;
+    printf("running: %s\n", name);
     return 0;  /* non-zero triggers the queue's fail policy */
 }
 
 int main(void)
 {
-    t_queue       queue;
-    t_queue_config cfg = { .policy = POLICY_CONTINUE, .max_retries = 3 };
+    t_queue queue;
+    const t_queue_config cfg = { .policy = POLICY_CONTINUE, .max_retries = 3, .on_error = NULL };
 
-    queue_init(&queue, 16, &cfg);
+    if (!queue_init(&queue, 16, &cfg))
+        return 1;
 
-    t_node_config ncfg = { .name = "task-1", .process = my_task,
-                            .args = NULL, .max_retries = -1 };
+    queue_register_handler(&queue, EVENT_TASK_RUN, my_task);
+
+    const t_node_config ncfg = {
+        .name = "task-1",
+        .event_type = EVENT_TASK_RUN,
+        .args = (void *)"task-1",
+        .del_for_args = NULL,
+        .max_retries = -1
+    };
     add_node_to_queue(&queue, new_node(&queue, &ncfg));
 
     run_queue_synchronous(&queue);
@@ -154,14 +165,22 @@ int main(void)
 ### Async listener (producer / consumer)
 
 ```c
-t_ring     ring;
-t_listener listener;
+#define EVENT_PROCESS_TASK 1
+
+queue_register_handler(&queue, EVENT_PROCESS_TASK, process_task);
 
 ring_init(&ring, 8);
 listener_start(&listener, &ring, &queue);
 
 /* Producer thread — push work from the main thread */
-ring_push(&ring, new_node(&queue, &ncfg));
+const t_node_config cfg = {
+    .name = "task-1",
+    .event_type = EVENT_PROCESS_TASK,
+    .args = NULL,
+    .del_for_args = NULL,
+    .max_retries = -1
+};
+ring_push(&ring, new_node(&queue, &cfg));
 
 /* Wait for all work to drain, then shut down */
 while (!ring_is_empty(&ring))

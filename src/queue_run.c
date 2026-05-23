@@ -1,10 +1,28 @@
 #include "queue.h"
 
-int     run_node(t_node *node)
+static int dispatch_event(t_queue *queue, t_node *node)
 {
-    if (node == NULL || node->process == NULL)
+    if (!queue || !node)
         return (0);
-    return (node->process(node));
+    if (node->event_type <= EVENT_TYPE_NONE || node->event_type >= EVENT_TYPE_MAX)
+        return (1);
+    if (!queue->handlers[node->event_type])
+        return (1);
+    return queue->handlers[node->event_type](node);
+}
+
+int     queue_register_handler(t_queue *queue, t_event_type type,
+                                t_event_handler handler)
+{
+    if (!queue || type <= EVENT_TYPE_NONE || type >= EVENT_TYPE_MAX)
+        return (0);
+    queue->handlers[type] = handler;
+    return (1);
+}
+
+int     run_node(t_queue *queue, t_node *node)
+{
+    return dispatch_event(queue, node);
 }
 
 void    run_queue_synchronous(t_queue *queue)
@@ -20,7 +38,7 @@ void    run_queue_synchronous(t_queue *queue)
     while (current)
     {
         next = current->next;
-        result = run_node(current);
+        result = run_node(queue, current);
         if (result != 0)
         {
             int effective = (current->max_retries >= 0)

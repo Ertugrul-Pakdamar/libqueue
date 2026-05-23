@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include "queue.h"
 
+# define EVENT_PROCESS_TASK 1
+
 /* ---- work functions ------------------------------------------------------- */
 
 static int process_task(t_node *self)
@@ -39,6 +41,9 @@ int main(void)
         fprintf(stderr, "queue_init failed\n");
         return (1);
     }
+
+    queue_register_handler(&queue, EVENT_PROCESS_TASK, process_task);
+
     if (!ring_init(&ring, 8))
     {
         queue_destroy(&queue);
@@ -64,7 +69,7 @@ int main(void)
 
     for (int i = 0; i < 5; i++)
     {
-        const t_node_config cfg = { task_names[i], process_task, NULL, NULL, -1 };
+        const t_node_config cfg = { task_names[i], EVENT_PROCESS_TASK, NULL, NULL, -1 };
         t_node *node = new_node(&queue, &cfg);
         if (!node)
         {
