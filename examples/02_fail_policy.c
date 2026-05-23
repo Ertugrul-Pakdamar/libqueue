@@ -13,6 +13,10 @@
 #include <stdio.h>
 #include "queue.h"
 
+# define EVENT_OK    1
+# define EVENT_FAIL  2
+# define EVENT_RETRY 3
+
 /* ---- helpers ------------------------------------------------------------- */
 
 static int always_ok(t_node *self)
@@ -53,12 +57,16 @@ static void run_demo(const char *label, t_fail_policy policy, int max_retries)
     if (!queue_init(&queue, 8, &cfg))
         return;
 
+    queue_register_handler(&queue, EVENT_OK, always_ok);
+    queue_register_handler(&queue, EVENT_FAIL, always_fail);
+    queue_register_handler(&queue, EVENT_RETRY, fail_then_ok);
+
     const t_node_config nodes[] = {
-        { "node_ok_1",      always_ok,   NULL, NULL, -1 },
-        { "node_fail",      always_fail, NULL, NULL, -1 },
-        { "node_ok_2",      always_ok,   NULL, NULL, -1 },
-        { "node_retry",     fail_then_ok, NULL, NULL, -1 },
-        { "node_ok_3",      always_ok,   NULL, NULL, -1 },
+        { "node_ok_1",  EVENT_OK,    NULL, NULL, -1 },
+        { "node_fail",  EVENT_FAIL,  NULL, NULL, -1 },
+        { "node_ok_2",  EVENT_OK,    NULL, NULL, -1 },
+        { "node_retry", EVENT_RETRY, NULL, NULL, -1 },
+        { "node_ok_3",  EVENT_OK,    NULL, NULL, -1 },
     };
 
     for (int i = 0; i < 5; i++)

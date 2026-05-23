@@ -28,7 +28,7 @@
 # define RING_CACHE_LINE 64  /**< Cache line size used for ring buffer padding. */
 
 /**
- * @brief Controls queue behaviour when a node's process() returns non-zero.
+ * @brief Controls queue behaviour when a node handler returns non-zero.
  */
 typedef enum e_fail_policy
 {
@@ -36,6 +36,17 @@ typedef enum e_fail_policy
     POLICY_STOP,     /**< Stop execution immediately after the first failure. */
     POLICY_RETRY     /**< Retry the failed node up to max_retries times. */
 }   t_fail_policy;
+
+/**
+ * @brief Event type identifier for a work node.
+ *
+ * Event types are numeric identifiers used by the queue dispatcher to route
+ * incoming work items to the correct handler.
+ */
+typedef int             t_event_type;
+
+# define EVENT_TYPE_NONE 0
+# define EVENT_TYPE_MAX  32 /**< Maximum number of event types supported. */
 
 /**
  * @brief A single unit of work in the queue.
@@ -46,13 +57,15 @@ typedef enum e_fail_policy
 typedef struct s_node
 {
     char            name[NODE_NAME_MAX]; /**< Human-readable node identifier. */
-    int             (*process)(struct s_node *); /**< Work function. Returns 0 on success. */
-    void            *args;              /**< Optional arguments passed to process(). */
+    t_event_type    event_type;         /**< Event type handled by the dispatcher. */
+    void            *args;              /**< Optional arguments passed to the handler. */
     void            (*del_for_args)(void *); /**< Destructor for args. May be NULL. */
     int             retry_count;        /**< Retries attempted so far (reset each run). */
     int             max_retries;        /**< Per-node retry limit. -1 = use queue default. */
     struct s_node   *next;              /**< Next node in the intrusive linked list. */
 }   t_node;
+
+typedef int (*t_event_handler)(t_node *node);
 
 /**
  * @brief Configuration passed to new_node().
@@ -63,8 +76,8 @@ typedef struct s_node
 typedef struct s_node_config
 {
     const char      *name;             /**< Node name (copied; caller retains ownership). */
-    int            (*process)(t_node *); /**< Work function. */
-    void            *args;             /**< Arguments for process(). Ownership transferred to node. */
+    t_event_type     event_type;        /**< Event type that will be dispatched. */
+    void            *args;             /**< Arguments for the handler. Ownership transferred to node. */
     void           (*del_for_args)(void *); /**< Destructor for args. May be NULL. */
     int              max_retries;      /**< Per-node retry limit. -1 = use queue default. */
 }   t_node_config;
@@ -80,6 +93,7 @@ typedef struct s_queue
     t_fail_policy    policy;      /**< Default failure policy. */
     int              max_retries; /**< Retry limit used when node->max_retries == -1. */
     void           (*on_error)(t_node *, int); /**< Called after retries are exhausted. May be NULL. */
+    t_event_handler  handlers[EVENT_TYPE_MAX]; /**< Event dispatch table. */
 }   t_queue;
 
 /**
@@ -136,11 +150,21 @@ void    node_destroy(t_queue *queue, t_node *node);
 void    clear_queue(t_queue *queue);
 
 /**
- * @brief Invoke a single node's process() function.
- * @param node Node to run.
- * @return Return value of node->process(). 0 indicates success.
+ * @brief Invoke the dispatcher for a single node's event.
+ * @param queue Queue providing handler lookup and retry configuration.
+ * @param node Node to dispatch.
+ * @return Handler return code. 0 indicates success.
  */
-int     run_node(t_node *node);
+int     run_node(t_queue *queue, t_node *node);
+
+/**
+ * @brief Register an event handler for a queue.
+ * @param queue Initialized queue.
+ * @param type  Event type.
+ * @param handler Handler function.
+ * @return 1 on success, 0 if the type is invalid.
+ */
+int     queue_register_handler(t_queue *queue, t_event_type type, t_event_handler handler);
 
 /**
  * @brief Run every node in the queue sequentially, then destroy each one.
