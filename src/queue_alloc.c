@@ -9,7 +9,7 @@
 */
 #include <stdlib.h>
 #include <string.h>
-#include "queue.h"
+#include "libqueue.h"
 
 int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config)
 {

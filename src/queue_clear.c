@@ -1,4 +1,4 @@
-#include "queue.h"
+#include "libqueue.h"
 
 void	node_destroy(t_queue *queue, t_node *node)
 {

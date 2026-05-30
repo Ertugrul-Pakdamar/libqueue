@@ -7,7 +7,7 @@
 **   lock-free operations at zero further cost.
 */
 #include <stdlib.h>
-#include "queue.h"
+#include "libqueue.h"
 
 _Static_assert(
     offsetof(t_ring, write_idx) % RING_CACHE_LINE == 0,

@@ -7,7 +7,7 @@ Contributions are welcome. Please read this guide before opening a PR.
 ## What can be contributed
 
 - Bug fixes in `src/`
-- New fail policies (add a value to `t_fail_policy` in `queue.h`, handle it in `queue_run.c`)
+- New fail policies (add a value to `t_fail_policy` in `libqueue.h`, handle it in `queue_run.c`)
 - Performance improvements to the ring buffer (`src/ring_ops.c`)
 - Additional queue utility functions (`src/queue_utils.c`)
 - New examples in `examples/` (see [Adding an example](#adding-an-example) below)
@@ -42,7 +42,7 @@ make re
 
 - C11, compiled with `-Wall -Wextra -Werror` — zero warnings is a hard requirement
 - Follow the existing naming convention: `t_` prefix for types, `snake_case` for functions
-- Public API changes must update `include/queue.h` with Doxygen `/** @brief */` comments
+- Public API changes must update `include/libqueue.h` with Doxygen `/** @brief */` comments
 - No `malloc` / `free` in library code — all memory comes from `libmem` allocators
 
 ---
@@ -83,7 +83,7 @@ examples/NN_short_name.c     (NN = two-digit number, e.g. 04_ring_backpressure.c
 
 ## Bumping the Version
 
-When a contribution changes the public API, the version macros in `include/queue.h`
+When a contribution changes the public API, the version macros in `include/libqueue.h`
 must be updated as part of the **same commit**.  
 Follow [Semantic Versioning](https://semver.org/):
 
@@ -97,6 +97,6 @@ Follow [Semantic Versioning](https://semver.org/):
 
 ### Steps
 
-1. Update the three numeric macros in `include/queue.h`.
+1. Update the three numeric macros in `include/libqueue.h`.
 2. Update `LIBQUEUE_VERSION` string to match.
 3. The maintainer will create a git tag after merging (`git tag vX.Y.Z`).

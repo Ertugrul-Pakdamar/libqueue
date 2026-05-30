@@ -1,4 +1,4 @@
-#include "queue.h"
+#include "libqueue.h"
 
 void    add_node_to_queue(t_queue *queue, t_node *node)
 {

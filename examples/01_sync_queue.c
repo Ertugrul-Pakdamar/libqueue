@@ -12,7 +12,7 @@
  */
 
 #include <stdio.h>
-#include "queue.h"
+#include "libqueue.h"
 
 # define EVENT_GREETING 1
 # define EVENT_LOG      2
