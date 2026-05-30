@@ -1,4 +1,4 @@
-#include "queue.h"
+#include "libqueue.h"
 
 static int dispatch_event(t_queue *queue, t_node *node)
 {

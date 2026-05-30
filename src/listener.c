@@ -1,4 +1,4 @@
-#include "queue.h"
+#include "libqueue.h"
 
 static void *worker(void *arg)
 {

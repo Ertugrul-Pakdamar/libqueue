@@ -11,7 +11,7 @@
  */
 
 #include <stdio.h>
-#include "queue.h"
+#include "libqueue.h"
 
 # define EVENT_OK    1
 # define EVENT_FAIL  2

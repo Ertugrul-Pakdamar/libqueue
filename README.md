@@ -37,7 +37,7 @@ libqueue/
 │   ├── 03_async_listener.c
 │   └── 04_mcu_main_loop.c
 ├── include/
-│   └── queue.h              public API  ← start here
+│   └── libqueue.h              public API  ← start here
 ├── src/                     library implementation
 │   ├── queue_alloc.c
 │   ├── queue_ops.c
@@ -129,7 +129,7 @@ make examples
 ### Synchronous queue
 
 ```c
-#include "queue.h"
+#include "libqueue.h"
 
 #define EVENT_TASK_RUN 1
 
@@ -218,11 +218,11 @@ This pattern is recommended for bare-metal and ISR-driven systems because it avo
 ```bash
 # Copy the static library and the public header
 cp libqueue.a      /your/project/lib/
-cp include/queue.h /your/project/include/
+cp include/libqueue.h /your/project/include/
 
 # Also copy the dependency headers
-cp deps/libmem/include/memory.h  /your/project/include/
-cp deps/libosal/include/osal.h   /your/project/include/
+cp deps/libmem/include/libmem.h  /your/project/include/
+cp deps/libosal/include/libosal.h   /your/project/include/
 
 # Link
 cc main.c -o app -Iinclude -Llib -lqueue -lmem -losal -lpthread
@@ -262,7 +262,7 @@ This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PA
 
 ### Current version
 
-`v0.1.0` — defined in `include/queue.h`:
+`v0.1.0` — defined in `include/libqueue.h`:
 
 ```c
 #define LIBQUEUE_VERSION_MAJOR 0
@@ -274,7 +274,7 @@ This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PA
 ### Compile-time version check
 
 ```c
-#include "include/queue.h"
+#include "include/libqueue.h"
 
 #if LIBQUEUE_VERSION_MAJOR == 0 && LIBQUEUE_VERSION_MINOR >= 1
     /* use a feature added in v0.1 */

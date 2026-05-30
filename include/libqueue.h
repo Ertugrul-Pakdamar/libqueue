@@ -1,5 +1,5 @@
 /**
- * @file queue.h
+ * @file libqueue.h
  * @brief libqueue public API — dynamic queue, lock-free ring buffer, async listener.
  *
  * All memory is allocated up front (pool, arena). No malloc occurs after
@@ -21,8 +21,8 @@
 # define LIBQUEUE_VERSION_PATCH 0
 # define LIBQUEUE_VERSION       "0.1.0"
 
-# include "../deps/libmem/include/memory.h"
-# include "../deps/libosal/include/osal.h"
+# include "../deps/libmem/include/libmem.h"
+# include "../deps/libosal/include/libosal.h"
 
 # define NODE_NAME_MAX   64  /**< Maximum length of a node name (incl. NUL). */
 # define RING_CACHE_LINE 64  /**< Cache line size used for ring buffer padding. */

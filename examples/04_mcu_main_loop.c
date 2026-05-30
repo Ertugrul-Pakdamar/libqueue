@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "queue.h"
+#include "libqueue.h"
 
 #define RING_SIZE 8
 #define NODE_POOL_SIZE 8
