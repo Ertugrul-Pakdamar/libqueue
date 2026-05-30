@@ -12,8 +12,12 @@
  *  - t_listener spawns one worker task; safe to push from one producer only.
  */
 
-#ifndef QUEUE_H
-# define QUEUE_H
+#ifndef LIBQUEUE_H
+# define LIBQUEUE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* ---- Version ------------------------------------------------------------- */
 # define LIBQUEUE_VERSION_MAJOR 0
@@ -23,6 +27,7 @@
 
 # include "../deps/libmem/include/libmem.h"
 # include "../deps/libosal/include/libosal.h"
+#include <libmem.h>
 
 # define NODE_NAME_MAX   64  /**< Maximum length of a node name (incl. NUL). */
 # define RING_CACHE_LINE 64  /**< Cache line size used for ring buffer padding. */
@@ -302,4 +307,7 @@ int     listener_start(t_listener *listener, t_ring *ring, t_queue *queue);
  */
 void    listener_stop(t_listener *listener);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
