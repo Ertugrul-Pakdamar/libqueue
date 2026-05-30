@@ -28,18 +28,14 @@ environments.
 
 ```
 libqueue/
-├── .git/                    git metadata
-├── .gitignore
-├── .gitmodules
-├── .vscode/                 optional editor settings
-├── LICENSE
-├── Makefile
-├── README.md
-├── CONTRIBUTING.md
-├── libqueue.a               built static library (build artifact)
-├── build/                   generated — not committed
-├── deps/                    submodules: libmem, libosal
-├── examples/                runnable examples and `bin/`
+├── deps/
+│   ├── libmem/              → github.com/Ertugrul-Pakdamar/libmem
+│   └── libosal/             → github.com/Ertugrul-Pakdamar/libosal
+├── examples/
+│   ├── 01_sync_queue.c
+│   ├── 02_fail_policy.c
+│   ├── 03_async_listener.c
+│   └── 04_mcu_main_loop.c
 ├── include/
 │   └── queue.h              public API  ← start here
 ├── src/                     library implementation
@@ -50,6 +46,10 @@ libqueue/
 │   ├── queue_utils.c
 │   ├── ring_ops.c
 │   └── listener.c
+├── LICENSE
+├── Makefile
+├── README.md
+└── CONTRIBUTING.md
 ```
 
 ---
