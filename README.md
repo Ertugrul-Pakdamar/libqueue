@@ -28,27 +28,28 @@ environments.
 
 ```
 libqueue/
-├── src/
-│   ├── queue_alloc.c        queue lifecycle, node creation
-│   ├── queue_ops.c          add_node_to_queue
-│   ├── queue_clear.c        node_destroy, clear_queue
-│   ├── queue_run.c          run_queue_synchronous, retry / policy logic
-│   ├── queue_utils.c        size_of_queue, get_last_node_of_queue
-│   ├── ring_ops.c           SPSC ring buffer
-│   └── listener.c           async worker thread
-├── include/
-│   └── queue.h              public API  ← start here
-├── deps/
-│   ├── libmem/              → github.com/Ertugrul-Pakdamar/libmem
-│   └── libosal/             → github.com/Ertugrul-Pakdamar/libosal
-├── examples/
-│   ├── 01_sync_queue.c
-│   ├── 02_fail_policy.c
-│   └── 03_async_listener.c
-├── build/                   generated — not committed
+├── .git/                    git metadata
+├── .gitignore
+├── .gitmodules
+├── .vscode/                 optional editor settings
+├── LICENSE
 ├── Makefile
 ├── README.md
-└── CONTRIBUTING.md
+├── CONTRIBUTING.md
+├── libqueue.a               built static library (build artifact)
+├── build/                   generated — not committed
+├── deps/                    submodules: libmem, libosal
+├── examples/                runnable examples and `bin/`
+├── include/
+│   └── queue.h              public API  ← start here
+├── src/                     library implementation
+│   ├── queue_alloc.c
+│   ├── queue_ops.c
+│   ├── queue_clear.c
+│   ├── queue_run.c
+│   ├── queue_utils.c
+│   ├── ring_ops.c
+│   └── listener.c
 ```
 
 ---
@@ -119,6 +120,7 @@ make examples
 | `examples/bin/01_sync_queue` | `examples/01_sync_queue.c` | Basic FIFO queue with `run_queue_synchronous` |
 | `examples/bin/02_fail_policy` | `examples/02_fail_policy.c` | `POLICY_CONTINUE`, `POLICY_STOP`, `POLICY_RETRY` side-by-side |
 | `examples/bin/03_async_listener` | `examples/03_async_listener.c` | Producer/consumer via ring buffer + listener thread |
+| `examples/bin/04_mcu_main_loop` | `examples/04_mcu_main_loop.c` | MCU-style main-loop consumer with ISR-safe producer (recommended for bare-metal/ISR) |
 
 ---
 
@@ -188,6 +190,18 @@ while (!ring_is_empty(&ring))
 listener_stop(&listener);
 ring_destroy(&ring);
 ```
+
+> Note: `listener_start()` and the `03_async_listener` example are provided as demos for platforms that support multithreading (OS/RTOS). For embedded (bare-metal) or ISR-driven environments, prefer a main-loop consumer model or using preallocated nodes with the SPSC ring instead of spawning threads. The core library does not perform dynamic memory allocation in ISRs; it is safe to `ring_push()` only preallocated `t_node` instances from an ISR.
+
+### MCU / Main-loop example (recommended for embedded)
+
+The `04_mcu_main_loop` example demonstrates a canonical embedded pattern:
+
+- Preallocate a pool of `t_node` instances at initialization time.
+- Emit events from an ISR (or ISR-simulating function) by calling `ring_push()` with a preallocated node — no locking or dynamic allocation in the ISR.
+- Run a simple main-loop that polls `ring_pop()`, dispatches nodes with `run_node()`, and returns nodes to the preallocated pool.
+
+This pattern is recommended for bare-metal and ISR-driven systems because it avoids thread creation, mutexes, and runtime allocation in interrupt context.
 
 ### Fail policies
 
