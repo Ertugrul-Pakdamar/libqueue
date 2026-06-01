@@ -44,15 +44,15 @@ int main(void)
         .max_retries = -1, 
         .del_for_args = NULL 
     };
-    n3 = new_node(&queue, &cfg);
+    n3 = node_new(&queue, &cfg);
     
     cfg.name = "high";
     cfg.args = (void *)"High Priority Event";
-    n1 = new_node(&queue, &cfg);
+    n1 = node_new(&queue, &cfg);
     
     cfg.name = "normal";
     cfg.args = (void *)"Normal Priority Event";
-    n2 = new_node(&queue, &cfg);
+    n2 = node_new(&queue, &cfg);
 
     /* 4. Push in reverse priority order: Low, then Normal, then High */
     /* Level 0 is Highest Priority, Level 2 is Lowest */
@@ -71,7 +71,7 @@ int main(void)
     /* 5. Pop and execute. It should pop High, then Normal, then Low. */
     while ((popped = prio_ring_pop(&pr)) != NULL)
     {
-        run_node(&queue, popped);
+        node_run(&queue, popped);
         node_destroy(&queue, popped);
     }
     
