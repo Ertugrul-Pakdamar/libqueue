@@ -2,9 +2,7 @@
 
 > **Repo:** [github.com/Ertugrul-Pakdamar/libqueue](https://github.com/Ertugrul-Pakdamar/libqueue)
 
-A C11 library providing a **dynamic node queue**, a **lock-free SPSC ring buffer**,
-and an **asynchronous listener** — designed for deterministic, zero-runtime-malloc
-environments.
+A C11 library providing a **dynamic node queue** and a **lock-free SPSC ring buffer** — designed for deterministic, zero-runtime-malloc environments.
 
 ---
 
@@ -14,7 +12,7 @@ environments.
 |---|---|
 | Dynamic queue | Intrusive linked list of work nodes backed by a fixed-size pool |
 | Lock-free ring | SPSC ring buffer with cache-line padding, release/acquire ordering |
-| Async listener | Worker thread draining the ring and executing nodes |
+| Bare-metal native | Build your own async worker or MCU main-loop without OS dependencies |
 | Fail policies | `POLICY_CONTINUE`, `POLICY_STOP`, `POLICY_RETRY` |
 | Per-node retry | Independent `max_retries` per node; falls back to queue default |
 | Zero runtime malloc | All memory allocated once at `init` time — no `malloc` after that |
@@ -39,13 +37,13 @@ libqueue/
 ├── include/
 │   └── libqueue.h              public API  ← start here
 ├── src/                     library implementation
-│   ├── queue_alloc.c
+│   ├── node_ops.c
+│   ├── queue_core.c
 │   ├── queue_ops.c
-│   ├── queue_clear.c
 │   ├── queue_run.c
-│   ├── queue_utils.c
+│   ├── ring_core.c
 │   ├── ring_ops.c
-│   └── listener.c
+│   └── ring_run.c
 ├── LICENSE
 ├── Makefile
 ├── README.md
@@ -117,9 +115,9 @@ make examples
 
 | Binary | Source | What it shows |
 |---|---|---|
-| `examples/bin/01_sync_queue` | `examples/01_sync_queue.c` | Basic FIFO queue with `run_queue_synchronous` |
+| `examples/bin/01_sync_queue` | `examples/01_sync_queue.c` | Basic FIFO queue with `queue_run_sync` |
 | `examples/bin/02_fail_policy` | `examples/02_fail_policy.c` | `POLICY_CONTINUE`, `POLICY_STOP`, `POLICY_RETRY` side-by-side |
-| `examples/bin/03_async_listener` | `examples/03_async_listener.c` | Producer/consumer via ring buffer + listener thread |
+| `examples/bin/03_async_listener` | `examples/03_async_listener.c` | Custom worker thread draining the ring buffer |
 | `examples/bin/04_mcu_main_loop` | `examples/04_mcu_main_loop.c` | MCU-style main-loop consumer with ISR-safe producer (recommended for bare-metal/ISR) |
 
 ---
@@ -157,14 +155,14 @@ int main(void)
         .del_for_args = NULL,
         .max_retries = -1
     };
-    add_node_to_queue(&queue, new_node(&queue, &ncfg));
+    queue_push(&queue, node_new(&queue, &ncfg));
 
-    run_queue_synchronous(&queue);
+    queue_run_sync(&queue);
     queue_destroy(&queue);
 }
 ```
 
-### Async listener (producer / consumer)
+### Async Worker (producer / consumer)
 
 ```c
 #define EVENT_PROCESS_TASK 1
@@ -172,7 +170,9 @@ int main(void)
 queue_register_handler(&queue, EVENT_PROCESS_TASK, process_task);
 
 ring_init(&ring, 8);
-listener_start(&listener, &ring, &queue);
+
+/* Start your custom worker thread here */
+// osal_task_create(&task, worker_thread_loop, ...);
 
 /* Producer thread — push work from the main thread */
 const t_node_config cfg = {
@@ -182,16 +182,19 @@ const t_node_config cfg = {
     .del_for_args = NULL,
     .max_retries = -1
 };
-ring_push(&ring, new_node(&queue, &cfg));
+ring_push(&ring, node_new(&queue, &cfg));
 
 /* Wait for all work to drain, then shut down */
 while (!ring_is_empty(&ring))
     ;
-listener_stop(&listener);
+
+/* Signal your worker to stop and wait for it */
+// running = 0; osal_task_join(&task);
+
 ring_destroy(&ring);
 ```
 
-> Note: `listener_start()` and the `03_async_listener` example are provided as demos for platforms that support multithreading (OS/RTOS). For embedded (bare-metal) or ISR-driven environments, prefer a main-loop consumer model or using preallocated nodes with the SPSC ring instead of spawning threads. The core library does not perform dynamic memory allocation in ISRs; it is safe to `ring_push()` only preallocated `t_node` instances from an ISR.
+> Note: `03_async_listener` example is provided as a demo for platforms that support multithreading (OS/RTOS) showing how to easily construct a thread loop utilizing `ring_run_sync`. For embedded (bare-metal) or ISR-driven environments, prefer a main-loop consumer model or using preallocated nodes with the SPSC ring instead of spawning threads. The core library does not perform dynamic memory allocation in ISRs; it is safe to `ring_push()` only preallocated `t_node` instances from an ISR.
 
 ### MCU / Main-loop example (recommended for embedded)
 
@@ -199,7 +202,7 @@ The `04_mcu_main_loop` example demonstrates a canonical embedded pattern:
 
 - Preallocate a pool of `t_node` instances at initialization time.
 - Emit events from an ISR (or ISR-simulating function) by calling `ring_push()` with a preallocated node — no locking or dynamic allocation in the ISR.
-- Run a simple main-loop that polls `ring_pop()`, dispatches nodes with `run_node()`, and returns nodes to the preallocated pool.
+- Run a simple main-loop that polls `ring_pop()`, dispatches nodes with `node_run()`, and returns nodes to the preallocated pool.
 
 This pattern is recommended for bare-metal and ISR-driven systems because it avoids thread creation, mutexes, and runtime allocation in interrupt context.
 
@@ -234,7 +237,7 @@ cc main.c -o app -Iinclude -Llib -lqueue -lmem -losal -lpthread
 
 | Rule | Deviation | Where | Rationale |
 |---|---|---|---|
-| 21.3 | `malloc` / `free` at init time | `src/queue_alloc.c`, `src/ring_ops.c` | Each is called exactly once (at `queue_init` / `ring_init`) to allocate a fixed backing buffer. No dynamic allocation occurs after initialisation. |
+| 21.3 | `malloc` / `free` at init time | `src/queue_core.c`, `src/ring_core.c` | Each is called exactly once (at `queue_init` / `ring_init`) to allocate a fixed backing buffer. No dynamic allocation occurs after initialisation. |
 | 21.21 | `<stdatomic.h>`, `<pthread.h>` | `deps/libosal/posix/osal_posix.c` | Release/acquire ordering is required for the lock-free SPSC ring buffer and cannot be achieved with standard C alone. Confined to a single translation unit. |
 
 All other translation units include only MISRA-compliant headers.

@@ -127,40 +127,53 @@ int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config
 void    queue_destroy(t_queue *queue);
 
 /**
- * @brief Allocate a new node from the queue's pool.
- * @param queue  Initialized queue (source pool).
- * @param config Node parameters. @c args ownership is transferred to the node.
- * @return Pointer to the new node, or NULL if the pool is exhausted.
- */
-t_node  *new_node(t_queue *queue, const t_node_config *config);
-
-/**
  * @brief Append a node to the tail of the queue.
  * @param queue Initialized queue.
- * @param node  Node created by new_node().
+ * @param node  Node created by node_new().
  */
-void    add_node_to_queue(t_queue *queue, t_node *node);
+void    queue_push(t_queue *queue, t_node *node);
 
 /**
- * @brief Call del_for_args on the node's args and return it to the pool.
- * @param queue Owning queue.
- * @param node  Node to release. Must not be accessed after this call.
+ * @brief Pop the oldest node from the front of the queue.
+ * @param queue Initialized queue.
+ * @return Next node pointer, or NULL if the queue is empty.
  */
-void    node_destroy(t_queue *queue, t_node *node);
+t_node  *queue_pop(t_queue *queue);
 
 /**
  * @brief Destroy every node currently in the queue.
  * @param queue Initialized queue.
  */
-void    clear_queue(t_queue *queue);
+void    queue_clear(t_queue *queue);
 
 /**
- * @brief Invoke the dispatcher for a single node's event.
- * @param queue Queue providing handler lookup and retry configuration.
- * @param node Node to dispatch.
- * @return Handler return code. 0 indicates success.
+ * @brief Count the nodes in the queue.
+ * @param queue Initialized queue.
+ * @return Number of nodes.
  */
-int     run_node(t_queue *queue, t_node *node);
+int     queue_size(t_queue *queue);
+
+/**
+ * @brief Check whether the queue has no items.
+ * @param queue Initialized queue.
+ * @return 1 if empty, 0 otherwise.
+ */
+int     queue_is_empty(t_queue *queue);
+
+/**
+ * @brief Find the last node in the queue.
+ * @param queue Initialized queue.
+ * @return Pointer to the tail node, or NULL if the queue is empty.
+ */
+t_node  *queue_tail(t_queue *queue);
+
+/**
+ * @brief Run every node in the queue sequentially, then destroy each one.
+ *
+ * Respects the queue's failure policy and retry configuration.
+ * @param queue Initialized queue.
+ */
+void    queue_run_sync(t_queue *queue);
 
 /**
  * @brief Register an event handler for a queue.
@@ -171,27 +184,30 @@ int     run_node(t_queue *queue, t_node *node);
  */
 int     queue_register_handler(t_queue *queue, t_event_type type, t_event_handler handler);
 
-/**
- * @brief Run every node in the queue sequentially, then destroy each one.
- *
- * Respects the queue's failure policy and retry configuration.
- * @param queue Initialized queue.
- */
-void    run_queue_synchronous(t_queue *queue);
+/* ---- Node Operations ----------------------------------------------------- */
 
 /**
- * @brief Count the nodes in the queue.
- * @param node queue->head.
- * @return Number of nodes.
+ * @brief Allocate a new node from the queue's pool.
+ * @param queue  Initialized queue (source pool).
+ * @param config Node parameters. @c args ownership is transferred to the node.
+ * @return Pointer to the new node, or NULL if the pool is exhausted.
  */
-int     size_of_queue(t_node *node);
+t_node  *node_new(t_queue *queue, const t_node_config *config);
 
 /**
- * @brief Find the last node in the queue.
- * @param queue queue->head.
- * @return Pointer to the tail node, or NULL if the queue is empty.
+ * @brief Call del_for_args on the node's args and return it to the pool.
+ * @param queue Owning queue.
+ * @param node  Node to release. Must not be accessed after this call.
  */
-t_node  *get_last_node_of_queue(t_node *queue);
+void    node_destroy(t_queue *queue, t_node *node);
+
+/**
+ * @brief Invoke the dispatcher for a single node's event.
+ * @param queue Queue providing handler lookup and retry configuration.
+ * @param node Node to dispatch.
+ * @return Handler return code. 0 indicates success.
+ */
+int     node_run(t_queue *queue, t_node *node);
 
 /**
  * @brief Lock-free SPSC ring buffer of t_node pointers.
@@ -279,33 +295,13 @@ int     ring_is_full(t_ring *ring);
 void    ring_drain(t_ring *ring, t_queue *queue);
 
 /**
- * @brief Async worker that consumes a ring buffer and executes each node.
+ * @brief Drain the ring and run all nodes sequentially until empty.
  *
  * Respects the queue's failure policy and retry configuration.
- * Start with listener_start(); stop with listener_stop().
+ * @param ring  Initialized ring buffer.
+ * @param queue Queue providing execution context.
  */
-typedef struct s_listener
-{
-    osal_task_t       task;    /**< OS task handle for the worker. */
-    osal_atomic_int_t running; /**< Non-zero while the worker loop is active. */
-    t_ring           *ring;    /**< Ring buffer the worker consumes. */
-    t_queue          *queue;   /**< Queue providing policy, retries, and pool. */
-}   t_listener;
-
-/**
- * @brief Start the async listener worker task.
- * @param listener Uninitialized listener.
- * @param ring     Ring buffer to consume.
- * @param queue    Queue providing execution context.
- * @return 1 on success, 0 if the task could not be created.
- */
-int     listener_start(t_listener *listener, t_ring *ring, t_queue *queue);
-
-/**
- * @brief Signal the worker to stop and wait for it to exit.
- * @param listener Running listener.
- */
-void    listener_stop(t_listener *listener);
+void    ring_run_sync(t_ring *ring, t_queue *queue);
 
 #ifdef __cplusplus
 }

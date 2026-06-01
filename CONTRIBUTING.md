@@ -7,11 +7,21 @@ Contributions are welcome. Please read this guide before opening a PR.
 ## What can be contributed
 
 - Bug fixes in `src/`
-- New fail policies (add a value to `t_fail_policy` in `libqueue.h`, handle it in `queue_run.c`)
-- Performance improvements to the ring buffer (`src/ring_ops.c`)
-- Additional queue utility functions (`src/queue_utils.c`)
+- New fail policies (add a value to `t_fail_policy` in `libqueue.h`, handle it in `queue_run.c` or `ring_run.c`)
+- Performance improvements to the lock-free ring buffer (`src/ring_ops.c`, `src/ring_core.c`)
+- Additional queue utility operations (`src/queue_ops.c`)
 - New examples in `examples/` (see [Adding an example](#adding-an-example) below)
 - Test coverage improvements
+
+---
+
+## Architecture & File Structure
+
+To keep the library highly cohesive, `src/` files follow a strict naming convention indicating their responsibility. If you add new functions, they must be placed in the appropriate file:
+
+- **`*_core.c` (e.g. `queue_core.c`, `ring_core.c`)**: Reserved for initialization, destruction, and memory/pool management (`init`, `destroy`, `drain`). Code here handles the **lifecycle** of the data structures.
+- **`*_ops.c` (e.g. `queue_ops.c`, `ring_ops.c`, `node_ops.c`)**: Reserved for pure data manipulation and utility operations (`push`, `pop`, `size`, `is_empty`, `new`). Code here handles the **state** and operates ideally in `O(1)` time without triggering side effects.
+- **`*_run.c` (e.g. `queue_run.c`, `ring_run.c`)**: Reserved for execution, event dispatching, and applying retry/fail policies (`run_sync`, `node_run`). Code here handles the **behavior** and executes the user's callbacks.
 
 ---
 
@@ -24,8 +34,8 @@ git clone https://github.com/Ertugrul-Pakdamar/libqueue.git
 cd libqueue
 
 # 3. Set up dependencies
-git clone https://github.com/Ertugrul-Pakdamar/libmem.git  deps/mem
-git clone https://github.com/Ertugrul-Pakdamar/libosal.git deps/osal
+git clone https://github.com/Ertugrul-Pakdamar/libmem.git  deps/libmem
+git clone https://github.com/Ertugrul-Pakdamar/libosal.git deps/libosal
 
 # 4. Create a feature branch
 git checkout -b feature/my-improvement
