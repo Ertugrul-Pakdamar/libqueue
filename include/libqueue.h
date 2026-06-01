@@ -21,13 +21,14 @@ extern "C" {
 
 /* ---- Version ------------------------------------------------------------- */
 # define LIBQUEUE_VERSION_MAJOR 0
-# define LIBQUEUE_VERSION_MINOR 1
+# define LIBQUEUE_VERSION_MINOR 2
 # define LIBQUEUE_VERSION_PATCH 0
-# define LIBQUEUE_VERSION       "0.1.0"
+# define LIBQUEUE_VERSION       "0.2.0"
 
 # include "../deps/libmem/include/libmem.h"
 # include "../deps/libosal/include/libosal.h"
 #include <libmem.h>
+#include <stdint.h>
 
 # define NODE_NAME_MAX   64  /**< Maximum length of a node name (incl. NUL). */
 # define RING_CACHE_LINE 64  /**< Cache line size used for ring buffer padding. */
@@ -306,6 +307,92 @@ int     listener_start(t_listener *listener, t_ring *ring, t_queue *queue);
  * @param listener Running listener.
  */
 void    listener_stop(t_listener *listener);
+
+/* ---- Priority Management ------------------------------------------------- */
+
+# define PRIORITY_MAX 32 /**< Maximum number of priority levels. */
+
+/**
+ * @brief Synchronous multi-level priority queue backed by an array of t_queue.
+ */
+typedef struct s_prio_queue
+{
+    t_queue  *queues;      /**< Array of initialized queues (one per level). */
+    int       num_levels;  /**< Number of priority levels. */
+    uint32_t  ready_mask;  /**< Bitmask indicating which levels contain nodes. */
+}   t_prio_queue;
+
+/**
+ * @brief Initialize a synchronous priority queue group.
+ * @param pq          Uninitialized priority queue structure.
+ * @param capacities  Array of capacities for each priority level queue.
+ * @param configs     Array of configurations for each priority level queue (can be NULL).
+ * @param num_levels  Number of priority levels (max PRIORITY_MAX).
+ * @return 1 on success, 0 on allocation failure.
+ */
+int     prio_queue_init(t_prio_queue *pq, const size_t *capacities, const t_queue_config *configs, int num_levels);
+
+/**
+ * @brief Destroy a synchronous priority queue group.
+ * @param pq Initialized priority queue structure.
+ */
+void    prio_queue_destroy(t_prio_queue *pq);
+
+/**
+ * @brief Push a node into a specific priority level of the synchronous queue.
+ * @param pq    Initialized priority queue structure.
+ * @param level Priority level (0 is highest priority).
+ * @param node  Node to enqueue.
+ */
+void    prio_queue_push(t_prio_queue *pq, int level, t_node *node);
+
+/**
+ * @brief Pop the highest priority node from the synchronous priority queues.
+ * @param pq Initialized priority queue structure.
+ * @return Highest priority node, or NULL if all queues are empty.
+ */
+t_node  *prio_queue_pop(t_prio_queue *pq);
+
+/**
+ * @brief Asynchronous/ISR-safe multi-level priority ring backed by an array of t_ring.
+ */
+typedef struct s_prio_ring
+{
+    t_ring              *rings;      /**< Array of initialized ring buffers. */
+    int                  num_levels; /**< Number of priority levels. */
+    osal_atomic_size_t   ready_mask; /**< Atomic bitmask of non-empty levels. */
+}   t_prio_ring;
+
+/**
+ * @brief Initialize an asynchronous priority ring group.
+ * @param pr         Uninitialized priority ring structure.
+ * @param capacities Array of capacities for each priority level ring.
+ * @param num_levels Number of priority levels (max PRIORITY_MAX).
+ * @return 1 on success, 0 on allocation failure.
+ */
+int     prio_ring_init(t_prio_ring *pr, const size_t *capacities, int num_levels);
+
+/**
+ * @brief Destroy an asynchronous priority ring group.
+ * @param pr Initialized priority ring structure.
+ */
+void    prio_ring_destroy(t_prio_ring *pr);
+
+/**
+ * @brief Push a node into a specific priority level of the asynchronous ring.
+ * @param pr    Initialized priority ring structure.
+ * @param level Priority level (0 is highest priority).
+ * @param node  Node to enqueue.
+ * @return 1 on success, 0 if the specified ring is full or level is invalid.
+ */
+int     prio_ring_push(t_prio_ring *pr, int level, t_node *node);
+
+/**
+ * @brief Pop the highest priority node from the asynchronous priority rings.
+ * @param pr Initialized priority ring structure.
+ * @return Highest priority node, or NULL if all rings are empty.
+ */
+t_node  *prio_ring_pop(t_prio_ring *pr);
 
 #ifdef __cplusplus
 }

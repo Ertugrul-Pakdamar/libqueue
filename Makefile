@@ -38,7 +38,9 @@ SRC :=  src/queue_alloc.c  \
         src/queue_clear.c  \
         src/queue_run.c    \
         src/queue_utils.c  \
+        src/queue_priority.c \
         src/ring_ops.c     \
+        src/ring_priority.c \
         src/listener.c
 
 OBJ := $(SRC:src/%.c=build/%.o)
