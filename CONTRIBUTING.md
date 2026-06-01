@@ -10,7 +10,8 @@ Contributions are welcome. Please read this guide before opening a PR.
 - New fail policies (add a value to `t_fail_policy` in `libqueue.h`, handle it in `queue_run.c` or `ring_run.c`)
 - Performance improvements to the lock-free ring buffer (`src/ring_ops.c`, `src/ring_core.c`)
 - Additional queue utility operations (`src/queue_ops.c`)
-- New examples in `examples/` (see [Adding an example](#adding-an-example) below)
+- Priority management enhancements (`src/queue_priority.c`, `src/ring_priority.c`)
+- New examples in `examples/`
 - Test coverage improvements
 
 ---
@@ -22,6 +23,7 @@ To keep the library highly cohesive, `src/` files follow a strict naming convent
 - **`*_core.c` (e.g. `queue_core.c`, `ring_core.c`)**: Reserved for initialization, destruction, and memory/pool management (`init`, `destroy`, `drain`). Code here handles the **lifecycle** of the data structures.
 - **`*_ops.c` (e.g. `queue_ops.c`, `ring_ops.c`, `node_ops.c`)**: Reserved for pure data manipulation and utility operations (`push`, `pop`, `size`, `is_empty`, `new`). Code here handles the **state** and operates ideally in `O(1)` time without triggering side effects.
 - **`*_run.c` (e.g. `queue_run.c`, `ring_run.c`)**: Reserved for execution, event dispatching, and applying retry/fail policies (`run_sync`, `node_run`). Code here handles the **behavior** and executes the user's callbacks.
+- **`*_priority.c` (e.g. `queue_priority.c`, `ring_priority.c`)**: Specialized modules for multi-level priority management.
 
 ---
 
@@ -48,12 +50,15 @@ make re
 
 ---
 
-## Code style
+## Code style (Mission Critical Standards)
 
-- C11, compiled with `-Wall -Wextra -Werror` — zero warnings is a hard requirement
-- Follow the existing naming convention: `t_` prefix for types, `snake_case` for functions
-- Public API changes must update `include/libqueue.h` with Doxygen `/** @brief */` comments
-- No `malloc` / `free` in library code — all memory comes from `libmem` allocators
+- **C11 Standard**: Compiled with `-Wall -Wextra -Werror`. Zero warnings allowed.
+- **MISRA C:2012**: Adherence to MISRA principles is mandatory.
+    - Use fixed-width types (`int32_t`, `uint32_t`, etc.) from `<stdint.h>` exclusively.
+    - No bare `int`, `char`, or `long` types.
+    - No dynamic memory allocation (`malloc`/`free`) outside of `*_init` functions.
+- **Naming**: `t_` prefix for types, `snake_case` for functions and variables.
+- **Documentation**: Public API changes must update `include/libqueue.h` with Doxygen `/** @brief */` comments.
 
 ---
 
@@ -82,31 +87,8 @@ examples/NN_short_name.c     (NN = two-digit number, e.g. 04_ring_backpressure.c
 ### Checklist
 
 1. The file compiles without warnings under `-Wall -Wextra -Werror`.
-2. The top of the file has a doc comment explaining what the example demonstrates
-   and how to build and run it.
-3. `main()` returns `0` on success, non-zero on failure — so CI can detect broken examples.
-4. No `malloc` / `free` in the example itself — use the queue's node pool
-   and provide a `del_for_args` destructor if `args` requires cleanup.
-5. Add a row to the **Examples** table in `README.md`.
-
----
-
-## Bumping the Version
-
-When a contribution changes the public API, the version macros in `include/libqueue.h`
-must be updated as part of the **same commit**.  
-Follow [Semantic Versioning](https://semver.org/):
-
-| What changed | Which macro | Reset |
-|---|---|---|
-| Bug fix, no API change | `PATCH` | — |
-| New public function or type added | `MINOR` | `PATCH → 0` |
-| Existing function removed or signature changed | `MAJOR` | `MINOR → 0`, `PATCH → 0` |
-
-> While `MAJOR == 0` (pre-release), breaking changes may be reflected in `MINOR` instead.
-
-### Steps
-
-1. Update the three numeric macros in `include/libqueue.h`.
-2. Update `LIBQUEUE_VERSION` string to match.
-3. The maintainer will create a git tag after merging (`git tag vX.Y.Z`).
+2. The top of the file has a doc comment explaining what the example demonstrates.
+3. Use fixed-width types in examples to match library standards.
+4. `main()` returns `0` on success, non-zero on failure.
+5. No `malloc` / `free` in the example itself — use the queue's node pool.
+6. Add a row to the **Examples** table in `README.md`.

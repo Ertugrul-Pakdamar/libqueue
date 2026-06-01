@@ -3,8 +3,8 @@
 void    ring_run_sync(t_ring *ring, t_queue *queue)
 {
     t_node  *current;
-    int     result;
-    int     effective;
+    int32_t     result;
+    int32_t     effective;
 
     if (!ring || !queue)
         return ;

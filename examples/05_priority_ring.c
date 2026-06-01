@@ -4,7 +4,7 @@
 
 #define EVENT_PRINT 1
 
-static int print_handler(t_node *node)
+static int32_t print_handler(t_node *node)
 {
     const char *msg = (const char *)node->args;
     printf("Executed: %s\n", msg);

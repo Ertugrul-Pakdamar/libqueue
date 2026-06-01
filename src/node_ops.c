@@ -32,7 +32,7 @@ void    node_destroy(t_queue *queue, t_node *node)
     osal_mutex_unlock(&queue->pool_lock);
 }
 
-static int dispatch_event(t_queue *queue, t_node *node)
+static int32_t dispatch_event(t_queue *queue, t_node *node)
 {
     if (!queue || !node)
         return (0);
@@ -43,7 +43,7 @@ static int dispatch_event(t_queue *queue, t_node *node)
     return queue->handlers[node->event_type](node);
 }
 
-int     node_run(t_queue *queue, t_node *node)
+int32_t     node_run(t_queue *queue, t_node *node)
 {
     return dispatch_event(queue, node);
 }

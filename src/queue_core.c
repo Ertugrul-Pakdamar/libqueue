@@ -10,7 +10,7 @@
 #include "libqueue.h"
 #include <stdlib.h>
 
-int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config)
+int32_t     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config)
 {
     void    *buffer;
     size_t  i;
@@ -46,7 +46,7 @@ void    queue_destroy(t_queue *queue)
     queue->node_pool.start_addr = NULL;
 }
 
-int     queue_register_handler(t_queue *queue, t_event_type type, t_event_handler handler)
+int32_t     queue_register_handler(t_queue *queue, t_event_type type, t_event_handler handler)
 {
     if (!queue || type <= EVENT_TYPE_NONE || type >= EVENT_TYPE_MAX)
         return (0);

@@ -1,6 +1,6 @@
 #include "libqueue.h"
 
-int     ring_push(t_ring *ring, t_node *node)
+int32_t     ring_push(t_ring *ring, t_node *node)
 {
     size_t  write;
     size_t  read;
@@ -39,12 +39,12 @@ size_t  ring_size(t_ring *ring)
     return (write - read);
 }
 
-int     ring_is_empty(t_ring *ring)
+int32_t     ring_is_empty(t_ring *ring)
 {
     return (ring_size(ring) == 0);
 }
 
-int     ring_is_full(t_ring *ring)
+int32_t     ring_is_full(t_ring *ring)
 {
     return (ring_size(ring) >= ring->capacity);
 }

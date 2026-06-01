@@ -4,8 +4,8 @@ void    queue_run_sync(t_queue *queue)
 {
     t_node  *current;
     t_node  *next;
-    int     result;
-    int     effective;
+    int32_t     result;
+    int32_t     effective;
 
     if (!queue || !queue->head)
         return ;

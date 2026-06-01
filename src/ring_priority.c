@@ -1,12 +1,12 @@
 #include "libqueue.h"
 #include <stdlib.h>
 
-static inline int get_highest_priority(size_t mask)
+static inline int32_t get_highest_priority(size_t mask)
 {
 #if defined(__GNUC__) || defined(__clang__)
     return __builtin_ctzl(mask);
 #else
-    int i = 0;
+    int32_t i = 0;
     while ((mask & 1) == 0) {
         mask >>= 1;
         i++;
@@ -15,9 +15,9 @@ static inline int get_highest_priority(size_t mask)
 #endif
 }
 
-int     prio_ring_init(t_prio_ring *pr, const size_t *capacities, int num_levels)
+int32_t     prio_ring_init(t_prio_ring *pr, const size_t *capacities, int32_t num_levels)
 {
-    int i;
+    int32_t i;
 
     if (!pr || !capacities || num_levels <= 0 || num_levels > PRIORITY_MAX)
         return (0);
@@ -47,7 +47,7 @@ int     prio_ring_init(t_prio_ring *pr, const size_t *capacities, int num_levels
 
 void    prio_ring_destroy(t_prio_ring *pr)
 {
-    int i;
+    int32_t i;
 
     if (!pr || !pr->rings)
         return ;
@@ -61,7 +61,7 @@ void    prio_ring_destroy(t_prio_ring *pr)
     pr->num_levels = 0;
 }
 
-int     prio_ring_push(t_prio_ring *pr, int level, t_node *node)
+int32_t     prio_ring_push(t_prio_ring *pr, int32_t level, t_node *node)
 {
     if (!pr || !pr->rings || level < 0 || level >= pr->num_levels)
         return (0);
@@ -77,7 +77,7 @@ int     prio_ring_push(t_prio_ring *pr, int level, t_node *node)
 t_node  *prio_ring_pop(t_prio_ring *pr)
 {
     size_t  mask;
-    int     level;
+    int32_t     level;
     t_node *node;
 
     if (!pr || !pr->rings)

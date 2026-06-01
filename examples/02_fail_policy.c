@@ -19,19 +19,19 @@
 
 /* ---- helpers ------------------------------------------------------------- */
 
-static int always_ok(t_node *self)
+static int32_t always_ok(t_node *self)
 {
     printf("  [ok]   %s\n", self->name);
     return (0);
 }
 
-static int always_fail(t_node *self)
+static int32_t always_fail(t_node *self)
 {
     printf("  [fail] %s\n", self->name);
     return (1);
 }
 
-static int fail_then_ok(t_node *self)
+static int32_t fail_then_ok(t_node *self)
 {
     /* Succeeds on the third attempt (retry_count is 0-based). */
     if (self->retry_count < 2)
@@ -43,12 +43,12 @@ static int fail_then_ok(t_node *self)
     return (0);
 }
 
-static void on_error(t_node *self, int code)
+static void on_error(t_node *self, int32_t code)
 {
     printf("  [error callback] node='%s' code=%d\n", self->name, code);
 }
 
-static void run_demo(const char *label, t_fail_policy policy, int max_retries)
+static void run_demo(const char *label, t_fail_policy policy, int32_t max_retries)
 {
     t_queue queue;
     const t_queue_config cfg = { policy, max_retries, on_error };
@@ -69,7 +69,7 @@ static void run_demo(const char *label, t_fail_policy policy, int max_retries)
         { "node_ok_3",  EVENT_OK,    NULL, NULL, -1 },
     };
 
-    for (int i = 0; i < 5; i++)
+    for (int32_t i = 0; i < 5; i++)
         queue_push(&queue, node_new(&queue, &nodes[i]));
 
     queue_run_sync(&queue);

@@ -49,7 +49,7 @@ typedef enum e_fail_policy
  * Event types are numeric identifiers used by the queue dispatcher to route
  * incoming work items to the correct handler.
  */
-typedef int             t_event_type;
+typedef int32_t             t_event_type;
 
 # define EVENT_TYPE_NONE 0
 # define EVENT_TYPE_MAX  32 /**< Maximum number of event types supported. */
@@ -66,12 +66,12 @@ typedef struct s_node
     t_event_type    event_type;         /**< Event type handled by the dispatcher. */
     void            *args;              /**< Optional arguments passed to the handler. */
     void            (*del_for_args)(void *); /**< Destructor for args. May be NULL. */
-    int             retry_count;        /**< Retries attempted so far (reset each run). */
-    int             max_retries;        /**< Per-node retry limit. -1 = use queue default. */
+    int32_t             retry_count;        /**< Retries attempted so far (reset each run). */
+    int32_t             max_retries;        /**< Per-node retry limit. -1 = use queue default. */
     struct s_node   *next;              /**< Next node in the intrusive linked list. */
 }   t_node;
 
-typedef int (*t_event_handler)(t_node *node);
+typedef int32_t (*t_event_handler)(t_node *node);
 
 /**
  * @brief Configuration passed to new_node().
@@ -85,7 +85,7 @@ typedef struct s_node_config
     t_event_type     event_type;        /**< Event type that will be dispatched. */
     void            *args;             /**< Arguments for the handler. Ownership transferred to node. */
     void           (*del_for_args)(void *); /**< Destructor for args. May be NULL. */
-    int              max_retries;      /**< Per-node retry limit. -1 = use queue default. */
+    int32_t              max_retries;      /**< Per-node retry limit. -1 = use queue default. */
 }   t_node_config;
 
 /**
@@ -97,8 +97,8 @@ typedef struct s_queue
     mem_pool_t       node_pool;   /**< Pool allocator for t_node instances. */
     osal_mutex_t     pool_lock;   /**< Protects pool_alloc/pool_free across threads. */
     t_fail_policy    policy;      /**< Default failure policy. */
-    int              max_retries; /**< Retry limit used when node->max_retries == -1. */
-    void           (*on_error)(t_node *, int); /**< Called after retries are exhausted. May be NULL. */
+    int32_t              max_retries; /**< Retry limit used when node->max_retries == -1. */
+    void           (*on_error)(t_node *, int32_t); /**< Called after retries are exhausted. May be NULL. */
     t_event_handler  handlers[EVENT_TYPE_MAX]; /**< Event dispatch table. */
 }   t_queue;
 
@@ -108,8 +108,8 @@ typedef struct s_queue
 typedef struct s_queue_config
 {
     t_fail_policy   policy;      /**< Failure policy. */
-    int             max_retries; /**< Default retry limit (0 falls back to 3). */
-    void          (*on_error)(t_node *, int); /**< Error callback. May be NULL. */
+    int32_t             max_retries; /**< Default retry limit (0 falls back to 3). */
+    void          (*on_error)(t_node *, int32_t); /**< Error callback. May be NULL. */
 }   t_queue_config;
 
 /**
@@ -119,7 +119,7 @@ typedef struct s_queue_config
  * @param config   Configuration. Pass NULL for defaults.
  * @return 1 on success, 0 on allocation failure.
  */
-int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config);
+int32_t     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config);
 
 /**
  * @brief Destroy a queue, releasing all nodes and the pool buffer.
@@ -152,14 +152,14 @@ void    queue_clear(t_queue *queue);
  * @param queue Initialized queue.
  * @return Number of nodes.
  */
-int     queue_size(t_queue *queue);
+int32_t     queue_size(t_queue *queue);
 
 /**
  * @brief Check whether the queue has no items.
  * @param queue Initialized queue.
  * @return 1 if empty, 0 otherwise.
  */
-int     queue_is_empty(t_queue *queue);
+int32_t     queue_is_empty(t_queue *queue);
 
 /**
  * @brief Find the last node in the queue.
@@ -183,7 +183,7 @@ void    queue_run_sync(t_queue *queue);
  * @param handler Handler function.
  * @return 1 on success, 0 if the type is invalid.
  */
-int     queue_register_handler(t_queue *queue, t_event_type type, t_event_handler handler);
+int32_t     queue_register_handler(t_queue *queue, t_event_type type, t_event_handler handler);
 
 /* ---- Node Operations ----------------------------------------------------- */
 
@@ -208,7 +208,7 @@ void    node_destroy(t_queue *queue, t_node *node);
  * @param node Node to dispatch.
  * @return Handler return code. 0 indicates success.
  */
-int     node_run(t_queue *queue, t_node *node);
+int32_t     node_run(t_queue *queue, t_node *node);
 
 /**
  * @brief Lock-free SPSC ring buffer of t_node pointers.
@@ -240,7 +240,7 @@ typedef struct __attribute__((aligned(RING_CACHE_LINE))) s_ring
  * @param capacity Desired capacity; rounded up to the next power of two.
  * @return 1 on success, 0 on allocation failure.
  */
-int     ring_init(t_ring *ring, size_t capacity);
+int32_t     ring_init(t_ring *ring, size_t capacity);
 
 /**
  * @brief Free the ring buffer's backing array.
@@ -256,7 +256,7 @@ void    ring_destroy(t_ring *ring);
  * @param node Node pointer to enqueue.
  * @return 1 on success, 0 if the ring is full.
  */
-int     ring_push(t_ring *ring, t_node *node);
+int32_t     ring_push(t_ring *ring, t_node *node);
 
 /**
  * @brief Pop the oldest node from the ring (consumer side).
@@ -277,14 +277,14 @@ size_t  ring_size(t_ring *ring);
  * @param ring Initialized ring.
  * @return 1 if empty, 0 otherwise.
  */
-int     ring_is_empty(t_ring *ring);
+int32_t     ring_is_empty(t_ring *ring);
 
 /**
  * @brief Check whether the ring has no free slots.
  * @param ring Initialized ring.
  * @return 1 if full, 0 otherwise.
  */
-int     ring_is_full(t_ring *ring);
+int32_t     ring_is_full(t_ring *ring);
 
 /**
  * @brief Pop and destroy every node remaining in the ring.
@@ -314,7 +314,7 @@ void    ring_run_sync(t_ring *ring, t_queue *queue);
 typedef struct s_prio_queue
 {
     t_queue  *queues;      /**< Array of initialized queues (one per level). */
-    int       num_levels;  /**< Number of priority levels. */
+    int32_t       num_levels;  /**< Number of priority levels. */
     uint32_t  ready_mask;  /**< Bitmask indicating which levels contain nodes. */
 }   t_prio_queue;
 
@@ -326,7 +326,7 @@ typedef struct s_prio_queue
  * @param num_levels  Number of priority levels (max PRIORITY_MAX).
  * @return 1 on success, 0 on allocation failure.
  */
-int     prio_queue_init(t_prio_queue *pq, const size_t *capacities, const t_queue_config *configs, int num_levels);
+int32_t     prio_queue_init(t_prio_queue *pq, const size_t *capacities, const t_queue_config *configs, int32_t num_levels);
 
 /**
  * @brief Destroy a synchronous priority queue group.
@@ -340,7 +340,7 @@ void    prio_queue_destroy(t_prio_queue *pq);
  * @param level Priority level (0 is highest priority).
  * @param node  Node to enqueue.
  */
-void    prio_queue_push(t_prio_queue *pq, int level, t_node *node);
+void    prio_queue_push(t_prio_queue *pq, int32_t level, t_node *node);
 
 /**
  * @brief Pop the highest priority node from the synchronous priority queues.
@@ -355,7 +355,7 @@ t_node  *prio_queue_pop(t_prio_queue *pq);
 typedef struct s_prio_ring
 {
     t_ring              *rings;      /**< Array of initialized ring buffers. */
-    int                  num_levels; /**< Number of priority levels. */
+    int32_t                  num_levels; /**< Number of priority levels. */
     osal_atomic_size_t   ready_mask; /**< Atomic bitmask of non-empty levels. */
 }   t_prio_ring;
 
@@ -366,7 +366,7 @@ typedef struct s_prio_ring
  * @param num_levels Number of priority levels (max PRIORITY_MAX).
  * @return 1 on success, 0 on allocation failure.
  */
-int     prio_ring_init(t_prio_ring *pr, const size_t *capacities, int num_levels);
+int32_t     prio_ring_init(t_prio_ring *pr, const size_t *capacities, int32_t num_levels);
 
 /**
  * @brief Destroy an asynchronous priority ring group.
@@ -381,7 +381,7 @@ void    prio_ring_destroy(t_prio_ring *pr);
  * @param node  Node to enqueue.
  * @return 1 on success, 0 if the specified ring is full or level is invalid.
  */
-int     prio_ring_push(t_prio_ring *pr, int level, t_node *node);
+int32_t     prio_ring_push(t_prio_ring *pr, int32_t level, t_node *node);
 
 /**
  * @brief Pop the highest priority node from the asynchronous priority rings.

@@ -25,7 +25,7 @@ typedef struct {
     osal_atomic_int_t  running;
 } worker_ctx_t;
 
-static int process_task(t_node *self)
+static int32_t process_task(t_node *self)
 {
     printf("[worker] executing: %s\n", self->name);
     return (0);
@@ -95,7 +95,7 @@ int main(void)
         "flush_buffer",
     };
 
-    for (int i = 0; i < 5; i++)
+    for (int32_t i = 0; i < 5; i++)
     {
         const t_node_config cfg = { task_names[i], EVENT_PROCESS_TASK, NULL, NULL, -1 };
         t_node *node = node_new(&queue, &cfg);

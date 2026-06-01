@@ -27,7 +27,7 @@ static size_t isr_nodes_top = 0; /* simple stack for example; init-only */
 /* Event type */
 #define EVT_SENSOR_SAMPLE 1
 
-int sensor_handler(t_node *n)
+int32_t sensor_handler(t_node *n)
 {
     const char *s = (const char *)n->args;
     printf("[handler] processed node: %s\n", s);
@@ -87,7 +87,7 @@ int main(void)
     }
 
     /* Simulate periodic ISR emissions */
-    for (int tick = 0; tick < 20; ++tick) {
+    for (int32_t tick = 0; tick < 20; ++tick) {
         /* Simulate ISR firing multiple times between main loop polls */
         simulated_isr_emit();
         simulated_isr_emit();
