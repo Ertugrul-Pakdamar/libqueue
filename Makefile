@@ -1,5 +1,5 @@
 # =============================================================================
-# libqueue — dynamic queue · SPSC ring buffer · async listener
+# libqueue — dynamic queue · SPSC ring buffer
 # =============================================================================
 #
 #  Targets (run `make` or `make help` to see this list):
@@ -33,15 +33,16 @@ CFLAGS  := -Wall -Wextra -Werror   \
 
 # -- Sources & objects --------------------------------------------------------
 
-SRC :=  src/queue_alloc.c  \
-        src/queue_ops.c    \
-        src/queue_clear.c  \
-        src/queue_run.c    \
-        src/queue_utils.c  \
-        src/queue_priority.c \
-        src/ring_ops.c     \
-        src/ring_priority.c \
-        src/listener.c
+SRC :=  src/node_ops.c        \
+        src/queue_core.c      \
+        src/queue_ops.c       \
+        src/queue_run.c       \
+        src/ring_core.c       \
+        src/ring_ops.c        \
+        src/ring_run.c        \
+        src/queue_utils.c     \
+        src/queue_priority.c  \
+        src/ring_priority.c
 
 OBJ := $(SRC:src/%.c=build/%.o)
 

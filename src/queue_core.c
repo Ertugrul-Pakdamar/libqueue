@@ -7,13 +7,13 @@
 **   deterministic than repeated individual allocations; all subsequent node
 **   allocations are served by the pool (O(1), no system call).
 */
-#include <stdlib.h>
-#include <string.h>
 #include "libqueue.h"
+#include <stdlib.h>
 
 int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config)
 {
     void    *buffer;
+    size_t  i;
 
     buffer = malloc(sizeof(t_node) * capacity);
     if (!buffer)
@@ -33,35 +33,23 @@ int     queue_init(t_queue *queue, size_t capacity, const t_queue_config *config
         queue->max_retries = 3;
         queue->on_error = NULL;
     }
-    for (size_t i = 0; i < EVENT_TYPE_MAX; ++i)
+    for (i = 0; i < EVENT_TYPE_MAX; ++i)
         queue->handlers[i] = NULL;
     return (1);
 }
 
 void    queue_destroy(t_queue *queue)
 {
-    clear_queue(queue);
+    queue_clear(queue);
     osal_mutex_destroy(&queue->pool_lock);
     free(queue->node_pool.start_addr);
     queue->node_pool.start_addr = NULL;
 }
 
-t_node  *new_node(t_queue *queue, const t_node_config *config)
+int     queue_register_handler(t_queue *queue, t_event_type type, t_event_handler handler)
 {
-    t_node  *node;
-
-    osal_mutex_lock(&queue->pool_lock);
-    node = (t_node *)pool_alloc(&queue->node_pool);
-    osal_mutex_unlock(&queue->pool_lock);
-    if (!node)
-        return (NULL);
-    strncpy(node->name, config->name, NODE_NAME_MAX - 1);
-    node->name[NODE_NAME_MAX - 1] = '\0';
-    node->event_type = config->event_type;
-    node->args = config->args;
-    node->del_for_args = config->del_for_args;
-    node->retry_count = 0;
-    node->max_retries = config->max_retries;
-    node->next = NULL;
-    return (node);
+    if (!queue || type <= EVENT_TYPE_NONE || type >= EVENT_TYPE_MAX)
+        return (0);
+    queue->handlers[type] = handler;
+    return (1);
 }

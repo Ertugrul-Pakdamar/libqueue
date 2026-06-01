@@ -70,9 +70,9 @@ static void run_demo(const char *label, t_fail_policy policy, int max_retries)
     };
 
     for (int i = 0; i < 5; i++)
-        add_node_to_queue(&queue, new_node(&queue, &nodes[i]));
+        queue_push(&queue, node_new(&queue, &nodes[i]));
 
-    run_queue_synchronous(&queue);
+    queue_run_sync(&queue);
     queue_destroy(&queue);
 }
 
