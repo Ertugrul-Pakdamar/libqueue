@@ -46,9 +46,9 @@ void    queue_clear(t_queue *queue)
     queue->head = NULL;
 }
 
-int     queue_size(t_queue *queue)
+int32_t     queue_size(t_queue *queue)
 {
-    int     len;
+    int32_t     len;
     t_node  *node;
 
     len = 0;
@@ -63,7 +63,7 @@ int     queue_size(t_queue *queue)
     return (len);
 }
 
-int     queue_is_empty(t_queue *queue)
+int32_t     queue_is_empty(t_queue *queue)
 {
     if (!queue || !queue->head)
         return (1);

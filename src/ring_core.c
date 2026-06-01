@@ -19,7 +19,7 @@ static size_t   next_power_of_two(size_t n)
     return (p);
 }
 
-int     ring_init(t_ring *ring, size_t capacity)
+int32_t     ring_init(t_ring *ring, size_t capacity)
 {
     void    *buffer;
 

@@ -1,12 +1,12 @@
 #include "libqueue.h"
 #include <stdlib.h>
 
-static inline int get_highest_priority(uint32_t mask)
+static inline int32_t get_highest_priority(uint32_t mask)
 {
 #if defined(__GNUC__) || defined(__clang__)
     return __builtin_ctz(mask);
 #else
-    int i = 0;
+    int32_t i = 0;
     while ((mask & 1) == 0) {
         mask >>= 1;
         i++;
@@ -15,9 +15,9 @@ static inline int get_highest_priority(uint32_t mask)
 #endif
 }
 
-int     prio_queue_init(t_prio_queue *pq, const size_t *capacities, const t_queue_config *configs, int num_levels)
+int32_t     prio_queue_init(t_prio_queue *pq, const size_t *capacities, const t_queue_config *configs, int32_t num_levels)
 {
-    int i;
+    int32_t i;
 
     if (!pq || !capacities || num_levels <= 0 || num_levels > PRIORITY_MAX)
         return (0);
@@ -46,7 +46,7 @@ int     prio_queue_init(t_prio_queue *pq, const size_t *capacities, const t_queu
 
 void    prio_queue_destroy(t_prio_queue *pq)
 {
-    int i;
+    int32_t i;
 
     if (!pq || !pq->queues)
         return ;
@@ -60,18 +60,18 @@ void    prio_queue_destroy(t_prio_queue *pq)
     pq->num_levels = 0;
 }
 
-void    prio_queue_push(t_prio_queue *pq, int level, t_node *node)
+void    prio_queue_push(t_prio_queue *pq, int32_t level, t_node *node)
 {
     if (!pq || !pq->queues || level < 0 || level >= pq->num_levels)
         return ;
 
-    add_node_to_queue(&pq->queues[level], node);
+    queue_push(&pq->queues[level], node);
     pq->ready_mask |= (1U << level);
 }
 
 t_node  *prio_queue_pop(t_prio_queue *pq)
 {
-    int     level;
+    int32_t     level;
     t_node *node;
 
     if (!pq || !pq->queues)

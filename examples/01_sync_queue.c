@@ -19,20 +19,20 @@
 
 /* ---- work functions ------------------------------------------------------- */
 
-static int greet(t_node *self)
+static int32_t greet(t_node *self)
 {
     const char *name = (const char *)self->args;
     printf("[%s] Hello from the queue!\n", name);
     return (0);
 }
 
-static int log_event(t_node *self)
+static int32_t log_event(t_node *self)
 {
     printf("[log] event '%s' handled\n", self->name);
     return (0);
 }
 
-static void on_error(t_node *self, int code)
+static void on_error(t_node *self, int32_t code)
 {
     fprintf(stderr, "node '%s' failed with code %d\n", self->name, code);
 }
@@ -60,7 +60,7 @@ int main(void)
         { "carol", EVENT_LOG,      NULL,           NULL, -1 },
     };
 
-    for (int i = 0; i < 3; i++)
+    for (int32_t i = 0; i < 3; i++)
         queue_push(&queue, node_new(&queue, &nodes[i]));
 
     printf("Queue size before run: %d\n", queue_size(&queue));

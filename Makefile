@@ -40,7 +40,6 @@ SRC :=  src/node_ops.c        \
         src/ring_core.c       \
         src/ring_ops.c        \
         src/ring_run.c        \
-        src/queue_utils.c     \
         src/queue_priority.c  \
         src/ring_priority.c
 
