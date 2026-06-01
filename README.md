@@ -119,6 +119,7 @@ make examples
 | `examples/bin/02_fail_policy` | `examples/02_fail_policy.c` | `POLICY_CONTINUE`, `POLICY_STOP`, `POLICY_RETRY` side-by-side |
 | `examples/bin/03_async_listener` | `examples/03_async_listener.c` | Custom worker thread draining the ring buffer |
 | `examples/bin/04_mcu_main_loop` | `examples/04_mcu_main_loop.c` | MCU-style main-loop consumer with ISR-safe producer (recommended for bare-metal/ISR) |
+| `examples/bin/05_priority_ring` | `examples/05_priority_ring.c` | O(1) bitmask-based deterministic priority queue polling |
 
 ---
 
@@ -206,6 +207,30 @@ The `04_mcu_main_loop` example demonstrates a canonical embedded pattern:
 
 This pattern is recommended for bare-metal and ISR-driven systems because it avoids thread creation, mutexes, and runtime allocation in interrupt context.
 
+### Priority Management
+
+libqueue provides multi-level priority support without sacrificing its lock-free or zero-malloc guarantees. Priority is implemented via bitmasking, enabling extremely fast, deterministic `O(1)` checking of pending events.
+
+There are two dedicated priority structures depending on your threading model:
+- `t_prio_queue`: Synchronous multi-level priority queue backed by an array of `t_queue`.
+- `t_prio_ring`: Asynchronous/ISR-safe multi-level priority ring backed by an array of lock-free `t_ring` buffers.
+
+**Example: Asynchronous Priority Ring**
+```c
+t_prio_ring pr;
+size_t capacities[3] = {16, 16, 16}; /* 3 priority levels */
+
+/* Initialize */
+prio_ring_init(&pr, capacities, 3);
+
+/* Push (0 is highest priority) */
+prio_ring_push(&pr, 2, low_priority_node);
+prio_ring_push(&pr, 0, high_priority_node);
+
+/* Pop always retrieves the highest priority available node first */
+t_node *node = prio_ring_pop(&pr); /* Returns high_priority_node */
+```
+
 ### Fail policies
 
 | Policy | Behaviour |
@@ -265,13 +290,13 @@ This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PA
 
 ### Current version
 
-`v0.1.0` — defined in `include/libqueue.h`:
+`v0.2.0` — defined in `include/libqueue.h`:
 
 ```c
 #define LIBQUEUE_VERSION_MAJOR 0
-#define LIBQUEUE_VERSION_MINOR 1
+#define LIBQUEUE_VERSION_MINOR 2
 #define LIBQUEUE_VERSION_PATCH 0
-#define LIBQUEUE_VERSION       "0.1.0"
+#define LIBQUEUE_VERSION       "0.2.0"
 ```
 
 ### Compile-time version check
