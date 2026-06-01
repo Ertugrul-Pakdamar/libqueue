@@ -3,7 +3,7 @@
  * - Preallocate a small pool of nodes at init time.
  * - ISR (simulated by a lightweight function) only calls `ring_push` with
  *   preallocated nodes. No dynamic allocation or mutexes inside ISR.
- * - Main loop polls `ring_pop` and dispatches via `run_node` / registered
+ * - Main loop polls `ring_pop` and dispatches via `node_run` / registered
  *   handlers.
  * This example is intended as guidance for embedded/bare-metal usage.
  */
@@ -72,7 +72,7 @@ int main(void)
 
     /* Preallocate NODE_POOL_SIZE nodes up front and push them to the free stack */
     for (size_t i = 0; i < NODE_POOL_SIZE; ++i) {
-        t_node *n = new_node(&queue, &(const t_node_config){
+        t_node *n = node_new(&queue, &(const t_node_config){
             .name = "isr-node",
             .event_type = EVT_SENSOR_SAMPLE,
             .args = NULL,
@@ -80,7 +80,7 @@ int main(void)
             .max_retries = -1
         });
         if (!n) {
-            fprintf(stderr, "new_node failed at %zu\n", i);
+            fprintf(stderr, "node_new failed at %zu\n", i);
             return 1;
         }
         isr_nodes[isr_nodes_top++] = n;
@@ -95,8 +95,8 @@ int main(void)
         /* Main loop: process all available items */
         t_node *n;
         while ((n = ring_pop(&ring)) != NULL) {
-            /* Dispatch using queue's run_node (synchronous execution) */
-            run_node(&queue, n);
+            /* Dispatch using queue's node_run (synchronous execution) */
+            node_run(&queue, n);
             /* Return node to preallocated pool for reuse */
             isr_nodes[isr_nodes_top++] = n;
         }

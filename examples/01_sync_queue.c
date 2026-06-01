@@ -4,7 +4,7 @@
  * Demonstrates the basic synchronous queue workflow:
  *   - queue_init with POLICY_CONTINUE
  *   - enqueue several nodes with event types and handlers
- *   - run_queue_synchronous dispatches and destroys them in FIFO order
+ *   - queue_run_sync dispatches and destroys them in FIFO order
  *   - queue_destroy releases all resources
  *
  * Build:  make examples
@@ -61,13 +61,13 @@ int main(void)
     };
 
     for (int i = 0; i < 3; i++)
-        add_node_to_queue(&queue, new_node(&queue, &nodes[i]));
+        queue_push(&queue, node_new(&queue, &nodes[i]));
 
-    printf("Queue size before run: %d\n", size_of_queue(queue.head));
+    printf("Queue size before run: %d\n", queue_size(&queue));
 
-    run_queue_synchronous(&queue);   /* runs + destroys every node */
+    queue_run_sync(&queue);   /* runs + destroys every node */
 
-    printf("Queue size after run:  %d\n", size_of_queue(queue.head));
+    printf("Queue size after run:  %d\n", queue_size(&queue));
 
     queue_destroy(&queue);
     return (0);
