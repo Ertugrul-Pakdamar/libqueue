@@ -33,15 +33,10 @@ CFLAGS  := -Wall -Wextra -Werror   \
 
 # -- Sources & objects --------------------------------------------------------
 
-SRC :=  src/node_ops.c        \
-        src/queue_core.c      \
-        src/queue_ops.c       \
-        src/queue_run.c       \
-        src/ring_core.c       \
-        src/ring_ops.c        \
-        src/ring_run.c        \
-        src/queue_priority.c  \
-        src/ring_priority.c
+SRC :=  src/lq_node_ops.c     \
+        src/lq_queue.c       \
+        src/lq_ring.c        \
+        src/lq_dispatcher.c
 
 OBJ := $(SRC:src/%.c=build/%.o)
 
